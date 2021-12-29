@@ -19,21 +19,13 @@ impl PID {
         }
     }
 
-    fn update(&mut self, error: f64) -> f64 {
+    fn next(&mut self, error: f64) -> f64 {
         let p = error;
         let i = self.next_integral(error);
         let d = self.next_derivative(error);
 
         self.integral = i;
         self.last_error = error;
-
-        self.next_output(p, i, d)
-    }
-
-    fn preview(self: Self, error: f64) -> f64 {
-        let p = error;
-        let i = self.next_integral(error);
-        let d = self.next_derivative(error);
 
         self.next_output(p, i, d)
     }
@@ -57,46 +49,46 @@ mod tests {
 
     #[test]
     fn test_proportional() {
-        let p = PID::new(1.0, 0.0, 0.0);
+        let mut p = PID::new(1.0, 0.0, 0.0);
 
-        assert_eq!(1.0, p.preview(1.0));
+        assert_eq!(1.0, p.next(1.0));
     }
 
     #[test]
     fn test_proportional_factor() {
-        let p = PID::new(2.0, 0.0, 0.0);
+        let mut p = PID::new(2.0, 0.0, 0.0);
 
-        assert_eq!(2.0, p.preview(1.0));
+        assert_eq!(2.0, p.next(1.0));
     }
 
     #[test]
     fn test_integral() {
-        let i = PID::new(0.0, 1.0, 0.0);
+        let mut i = PID::new(0.0, 1.0, 0.0);
 
-        assert_eq!(1.0, i.preview(1.0));
+        assert_eq!(1.0, i.next(1.0));
     }
 
     #[test]
     fn test_integral_grows_over_time() {
         let mut i = PID::new(0.0, 1.0, 0.0);
 
-        assert_eq!(1.0, i.update(1.0));
-        assert_eq!(2.0, i.update(1.0));
-        assert_eq!(3.0, i.update(1.0));
+        assert_eq!(1.0, i.next(1.0));
+        assert_eq!(2.0, i.next(1.0));
+        assert_eq!(3.0, i.next(1.0));
     }
 
     #[test]
     fn test_derivative() {
-        let d = PID::new(0.0, 0.0, 1.0);
+        let mut d = PID::new(0.0, 0.0, 1.0);
 
-        assert_eq!(-1.0, d.preview(1.0))
+        assert_eq!(-1.0, d.next(1.0))
     }
 
     #[test]
     fn test_derivative_dampens_by_rate_of_change() {
         let mut d = PID::new(0.0, 0.0, 1.0);
 
-        assert_eq!(-1.0, d.update(1.0));
-        assert_eq!(0.0, d.update(1.0));
+        assert_eq!(-1.0, d.next(1.0));
+        assert_eq!(0.0, d.next(1.0));
     }
 }
