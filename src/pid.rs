@@ -38,7 +38,7 @@ impl Pid {
         error - self.last_error
     }
 
-    fn next_output(self: &Self, p: f64, i: f64, d: f64) -> f64 {
+    fn next_output(&self, p: f64, i: f64, d: f64) -> f64 {
         p * self.proportional_factor + i * self.integral_factor - d * self.derivative_factor
     }
 }
