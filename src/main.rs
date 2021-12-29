@@ -4,8 +4,13 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Opts {
-    #[clap(long)]
-    command: String,
+    #[clap(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Parser, Debug)]
+enum Command {
+    Current,
 }
 
 fn main() {
@@ -18,7 +23,9 @@ fn main() {
 fn try_main() -> Result<()> {
     let opts = Opts::parse();
 
-    println!("{:#?}", opts);
+    let command = opts.command.unwrap_or(Command::Current);
+
+    println!("{:#?}", command);
 
     Ok(())
 }
