@@ -1,6 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
 
+mod pid;
+
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Opts {
