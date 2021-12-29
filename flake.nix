@@ -9,7 +9,8 @@
       let pkgs = import nixpkgs { inherit system; };
       in {
         devShell = pkgs.mkShell {
-          packages = [ pkgs.rustc pkgs.cargo pkgs.clippy pkgs.libiconv ];
+          packages =
+            [ pkgs.cargo pkgs.clippy pkgs.libiconv pkgs.rustc pkgs.rustfmt ];
         };
       });
 }
