@@ -8,6 +8,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = import nixpkgs { inherit system; };
       in {
-        devShell = pkgs.mkShell { packages = [ pkgs.rustc pkgs.cargo ]; };
+        devShell =
+          pkgs.mkShell { packages = [ pkgs.rustc pkgs.cargo pkgs.libiconv ]; };
       });
 }
