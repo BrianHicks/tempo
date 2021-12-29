@@ -1,4 +1,4 @@
-struct PID {
+struct Pid {
     proportional_factor: f64,
 
     integral: f64,
@@ -8,9 +8,9 @@ struct PID {
     derivative_factor: f64,
 }
 
-impl PID {
-    fn new(proportional_factor: f64, integral_factor: f64, derivative_factor: f64) -> Self {
-        PID {
+impl Pid {
+    pub fn new(proportional_factor: f64, integral_factor: f64, derivative_factor: f64) -> Self {
+        Pid {
             proportional_factor,
             integral: 0.0,
             integral_factor,
@@ -49,28 +49,28 @@ mod tests {
 
     #[test]
     fn test_proportional() {
-        let mut p = PID::new(1.0, 0.0, 0.0);
+        let mut p = Pid::new(1.0, 0.0, 0.0);
 
         assert_eq!(1.0, p.next(1.0));
     }
 
     #[test]
     fn test_proportional_factor() {
-        let mut p = PID::new(2.0, 0.0, 0.0);
+        let mut p = Pid::new(2.0, 0.0, 0.0);
 
         assert_eq!(2.0, p.next(1.0));
     }
 
     #[test]
     fn test_integral() {
-        let mut i = PID::new(0.0, 1.0, 0.0);
+        let mut i = Pid::new(0.0, 1.0, 0.0);
 
         assert_eq!(1.0, i.next(1.0));
     }
 
     #[test]
     fn test_integral_grows_over_time() {
-        let mut i = PID::new(0.0, 1.0, 0.0);
+        let mut i = Pid::new(0.0, 1.0, 0.0);
 
         assert_eq!(1.0, i.next(1.0));
         assert_eq!(2.0, i.next(1.0));
@@ -79,14 +79,14 @@ mod tests {
 
     #[test]
     fn test_derivative() {
-        let mut d = PID::new(0.0, 0.0, 1.0);
+        let mut d = Pid::new(0.0, 0.0, 1.0);
 
         assert_eq!(-1.0, d.next(1.0))
     }
 
     #[test]
     fn test_derivative_dampens_by_rate_of_change() {
-        let mut d = PID::new(0.0, 0.0, 1.0);
+        let mut d = Pid::new(0.0, 0.0, 1.0);
 
         assert_eq!(-1.0, d.next(1.0));
         assert_eq!(0.0, d.next(1.0));
