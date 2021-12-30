@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.52"
 chrono = "0.4.19"
-clap = { version = "3.0.0-rc.9", features = [ "std", "color", "suggestions", "derive", "cargo" ] }
+clap = { version = "3.0.0-rc.9", features = [ "std", "color", "suggestions", "derive", "cargo", "wrap_help" ] }
