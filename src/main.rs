@@ -2,6 +2,8 @@ use anyhow::{bail, Context, Result};
 use chrono::Duration;
 use clap::Parser;
 
+mod store;
+
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Opts {
