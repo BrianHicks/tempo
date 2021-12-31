@@ -49,9 +49,9 @@ fn try_main() -> Result<()> {
     Ok(())
 }
 
-// Parse a simple duration string: a number followed by a unit of hours (h),
-// days (d), or weeks (w). Months and years are not supported due to varying
-// length in those units.
+/// Parse a simple duration string: a number followed by a unit of hours (h),
+/// days (d), or weeks (w). Months and years are supported but are rougher:
+/// we'll assume a 30-day month and a 365-day year.
 fn parse_duration(input: &str) -> Result<Duration> {
     let mut digits_offset = 0;
     let mut tag = None;
@@ -86,7 +86,9 @@ fn parse_duration(input: &str) -> Result<Duration> {
         Some('h') => Duration::hours(amount),
         Some('d') => Duration::days(amount),
         Some('w') => Duration::weeks(amount),
-        _ => bail!("expected to see a tag (h, d, w) after the amount"),
+        Some('m') => Duration::days(amount * 30),
+        Some('y') => Duration::days(amount * 365),
+        _ => bail!("expected to see a tag (h, d, w, m, y) after the amount"),
     };
 
     Ok(out)
@@ -114,6 +116,16 @@ mod tests {
     #[test]
     fn parse_duration_weeks() {
         assert_eq!(Duration::weeks(1), parse_duration("1w").unwrap());
+    }
+
+    #[test]
+    fn parse_duration_months() {
+        assert_eq!(Duration::days(30), parse_duration("1m").unwrap());
+    }
+
+    #[test]
+    fn parse_duration_years() {
+        assert_eq!(Duration::days(365), parse_duration("1y").unwrap());
     }
 
     #[test]
