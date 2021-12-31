@@ -25,7 +25,8 @@ struct AddCommand {
     text: String,
 
     /// Initial guess on cadence. Don't worry about this being incorrect; we'll
-    /// find the right value over time!
+    /// find the right value over time! Supported units: hours (h), days (d),
+    /// weeks (w), 30-day months (m), 365-day years (y)
     #[clap(short, long, default_value = "1d", parse(try_from_str = parse_duration))]
     cadence: Duration,
 
