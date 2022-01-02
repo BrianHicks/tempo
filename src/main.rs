@@ -15,7 +15,6 @@ struct Opts {
 
 #[derive(Parser, Debug)]
 enum Command {
-    Current,
     /// Add a new item to the store
     Add(AddCommand),
 }
@@ -23,7 +22,7 @@ enum Command {
 #[derive(Parser, Debug)]
 struct AddCommand {
     /// Text of the item to add
-    text: Vec<String>,
+    name: Vec<String>,
 
     /// What category does this item belong to?
     #[clap(short, long)]
@@ -37,7 +36,7 @@ struct AddCommand {
 
     /// When should this next be scheduled?
     #[clap(short, long)]
-    next: Option<String>,
+    next: Option<String>, // TODO: should be a chrono date or something
 }
 
 fn main() {
@@ -50,7 +49,18 @@ fn main() {
 fn try_main() -> Result<()> {
     let opts = Opts::parse();
 
-    println!("{:#?}", opts);
+    let mut store = store::Store::default(); // TODO: load from disk
+
+    match opts.command {
+        Some(Command::Add(add)) => {
+            let id = store.add(add.name.join(" "), add.tags, add.cadence);
+            println!("{:#?}", store.get(id));
+        }
+
+        None => {
+            println!("{:#?}", opts)
+        }
+    };
 
     Ok(())
 }

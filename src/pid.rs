@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Pid {
     proportional_factor: f64,
 

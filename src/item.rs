@@ -1,6 +1,7 @@
 use crate::pid::Pid;
 use chrono::Duration;
 
+#[derive(Debug)]
 pub struct Item {
     pub id: usize,
     pub name: String,

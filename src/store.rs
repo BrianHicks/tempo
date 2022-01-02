@@ -2,7 +2,7 @@ use crate::item::Item;
 use crate::pid::Pid;
 use chrono::Duration;
 
-struct Store {
+pub struct Store {
     items: Vec<Item>,
 }
 
@@ -15,7 +15,7 @@ impl Default for Store {
 }
 
 impl Store {
-    fn add(&mut self, name: String, tags: Vec<String>, cadence: Duration) -> usize {
+    pub fn add(&mut self, name: String, tags: Vec<String>, cadence: Duration) -> usize {
         let id = self.items.iter().map(|i| i.id).max().unwrap_or(1);
 
         let item = Item {
@@ -30,7 +30,7 @@ impl Store {
         id
     }
 
-    fn get(&self, id: usize) -> Option<&Item> {
+    pub fn get(&self, id: usize) -> Option<&Item> {
         for item in &self.items {
             if item.id == id {
                 return Some(item);
