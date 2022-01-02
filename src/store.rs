@@ -1,4 +1,5 @@
 use crate::item::Item;
+use chrono::Duration;
 
 struct Store {
     items: Vec<Item>,
@@ -13,10 +14,15 @@ impl Default for Store {
 }
 
 impl Store {
-    fn add(&mut self, name: String, tags: Vec<String>) -> usize {
+    fn add(&mut self, name: String, tags: Vec<String>, cadence: Duration) -> usize {
         let id = self.items.iter().map(|i| i.id).max().unwrap_or(1);
 
-        let item = Item { id, name, tags };
+        let item = Item {
+            id,
+            name,
+            tags,
+            cadence,
+        };
 
         self.items.push(item);
         id
@@ -43,12 +49,14 @@ mod tests {
 
         let tag = "books".to_string();
         let item_name = "Gödel, Escher, Bach".to_string();
+        let initial_guess = Duration::weeks(2);
 
-        let id = store.add(item_name.clone(), vec![tag.clone()]);
+        let id = store.add(item_name.clone(), vec![tag.clone()], initial_guess);
         let item = store.get(id).unwrap();
 
         assert_eq!(1, item.id);
         assert_eq!(item_name, item.name);
         assert_eq!(vec![tag], item.tags);
+        assert_eq!(initial_guess, item.cadence);
     }
 }
