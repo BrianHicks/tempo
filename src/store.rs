@@ -1,40 +1,35 @@
-use std::collections::HashMap;
+use crate::item::Item;
 
 struct Store {
-    categories: HashMap<String, Category>,
+    items: Vec<Item>,
 }
 
 impl Default for Store {
     fn default() -> Store {
         Store {
-            categories: HashMap::default(),
+            items: Vec::default(),
         }
     }
 }
 
 impl Store {
-    fn add(&mut self, category_name: String, item: Item) {
-        match self.categories.get_mut(&category_name) {
-            Some(category) => category.items.push(item),
-            None => {
-                self.categories
-                    .insert(category_name, Category { items: vec![item] });
+    fn add(&mut self, name: String) -> usize {
+        let id = self.items.iter().map(|i| i.id).max().unwrap_or(1);
+
+        let item = Item { id, name };
+
+        self.items.push(item);
+        id
+    }
+
+    fn get(&self, id: usize) -> Option<&Item> {
+        for item in &self.items {
+            if item.id == id {
+                return Some(item);
             }
         }
-    }
-}
 
-struct Category {
-    items: Vec<Item>,
-}
-
-struct Item {
-    name: String,
-}
-
-impl Item {
-    fn new(name: String) -> Item {
-        Item { name }
+        None
     }
 }
 
@@ -46,14 +41,13 @@ mod tests {
     fn add_item() {
         let mut store = Store::default();
 
-        let category_name = "books".to_string();
+        // let category_name = "books".to_string();
         let item_name = "Gödel, Escher, Bach".to_string();
 
-        store.add(category_name.clone(), Item::new(item_name.clone()));
+        let id = store.add(item_name.clone());
+        let item = store.get(id).unwrap();
 
-        // Below here does too much inspection of internal state and I wanna
-        // replace it soon!
-        let category = store.categories.get(&category_name).unwrap();
-        assert_eq!(item_name, category.items[0].name);
+        assert_eq!(1, item.id);
+        assert_eq!(item_name, item.name);
     }
 }

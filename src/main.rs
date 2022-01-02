@@ -2,6 +2,7 @@ use anyhow::{bail, Context, Result};
 use chrono::Duration;
 use clap::Parser;
 
+mod item;
 mod store;
 
 #[derive(Parser, Debug)]
