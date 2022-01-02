@@ -13,10 +13,10 @@ impl Default for Store {
 }
 
 impl Store {
-    fn add(&mut self, name: String) -> usize {
+    fn add(&mut self, name: String, tags: Vec<String>) -> usize {
         let id = self.items.iter().map(|i| i.id).max().unwrap_or(1);
 
-        let item = Item { id, name };
+        let item = Item { id, name, tags };
 
         self.items.push(item);
         id
@@ -41,13 +41,14 @@ mod tests {
     fn add_item() {
         let mut store = Store::default();
 
-        // let category_name = "books".to_string();
+        let tag = "books".to_string();
         let item_name = "Gödel, Escher, Bach".to_string();
 
-        let id = store.add(item_name.clone());
+        let id = store.add(item_name.clone(), vec![tag.clone()]);
         let item = store.get(id).unwrap();
 
         assert_eq!(1, item.id);
         assert_eq!(item_name, item.name);
+        assert_eq!(vec![tag], item.tags);
     }
 }
