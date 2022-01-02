@@ -22,11 +22,12 @@ enum Command {
 
 #[derive(Parser, Debug)]
 struct AddCommand {
-    /// What category does this item belong to?
-    category: String,
-
     /// Text of the item to add
-    text: String,
+    text: Vec<String>,
+
+    /// What category does this item belong to?
+    #[clap(short, long)]
+    tags: Vec<String>,
 
     /// Initial guess on cadence. Don't worry about this being incorrect; we'll
     /// find the right value over time! Supported units: hours (h), days (d),
