@@ -1,4 +1,4 @@
-struct Pid {
+pub struct Pid {
     proportional_factor: f64,
 
     integral: f64,
@@ -19,7 +19,7 @@ impl Pid {
         }
     }
 
-    fn next(&mut self, error: f64) -> f64 {
+    pub fn next(&mut self, error: f64) -> f64 {
         let p = error;
         let i = self.next_integral(error);
         let d = self.next_derivative(error);

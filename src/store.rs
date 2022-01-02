@@ -1,4 +1,5 @@
 use crate::item::Item;
+use crate::pid::Pid;
 use chrono::Duration;
 
 struct Store {
@@ -22,6 +23,7 @@ impl Store {
             name,
             tags,
             cadence,
+            pid: Pid::new(1.5, 0.3, 0.1),
         };
 
         self.items.push(item);
