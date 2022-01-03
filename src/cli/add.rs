@@ -26,23 +26,25 @@ pub struct AddCommand {
 
 impl AddCommand {
     pub fn run(&self, mut store: crate::store::Store) -> Result<()> {
+        let now = Utc::now();
+
         let id = store.add(
             self.name.join(" "),
             &self.tags,
-            self.get_cadence(),
-            self.get_next(Utc::now()),
+            self.get_cadence(now),
+            self.get_next(now),
         );
         println!("{:#?}", store.get(id));
 
         Ok(())
     }
 
-    fn get_cadence(&self) -> Duration {
-        self.cadence.unwrap_or(Duration::days(1))
+    fn get_cadence(&self, now: DateTime<Utc>) -> Duration {
+        self.cadence.unwrap_or_else(|| self.get_next(now) - now)
     }
 
     fn get_next(&self, now: DateTime<Utc>) -> DateTime<Utc> {
-        self.next.unwrap_or_else(|| now + self.get_cadence())
+        self.next.unwrap_or_else(|| now + self.get_cadence(now))
     }
 }
 
@@ -60,18 +62,17 @@ mod test {
     }
 
     #[test]
-    fn uses_next_if_present() {
+    fn next_is_used() {
         let next = Utc::now() + Duration::weeks(1);
 
         let mut command = default();
-        command.cadence = Some(Duration::days(1));
         command.next = Some(next);
 
         assert_eq!(next, command.get_next(Utc::now()))
     }
 
     #[test]
-    fn calculates_next_based_on_cadence() {
+    fn next_is_calculated_based_on_cadence() {
         let now = Utc::now();
         let duration = Duration::days(1);
 
@@ -80,5 +81,27 @@ mod test {
         command.next = None; // just to be explicit
 
         assert_eq!(now + duration, command.get_next(now));
+    }
+
+    #[test]
+    fn cadence_is_used() {
+        let cadence = Duration::weeks(1);
+
+        let mut command = default();
+        command.cadence = Some(cadence);
+
+        assert_eq!(cadence, command.get_cadence(Utc::now()))
+    }
+
+    #[test]
+    fn cadence_is_calculated_based_on_next() {
+        let now = Utc::now();
+        let next = now + Duration::weeks(1);
+
+        let mut command = default();
+        command.cadence = None; // just to be explicit
+        command.next = Some(next);
+
+        assert_eq!(next - now, command.get_cadence(now));
     }
 }
