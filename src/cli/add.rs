@@ -26,7 +26,12 @@ pub struct AddCommand {
 
 impl AddCommand {
     pub fn run(&self, mut store: crate::store::Store) -> Result<()> {
-        let id = store.add(self.name.join(" "), &self.tags, self.cadence);
+        let id = store.add(
+            self.name.join(" "),
+            &self.tags,
+            self.cadence,
+            self.get_next(Utc::now()),
+        );
         println!("{:#?}", store.get(id));
 
         Ok(())

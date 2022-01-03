@@ -1,5 +1,5 @@
 use crate::pid::Pid;
-use chrono::Duration;
+use chrono::{DateTime, Duration, Utc};
 
 #[derive(Debug)]
 pub struct Item {
@@ -9,5 +9,6 @@ pub struct Item {
 
     // scheduling
     pub cadence: Duration,
+    pub next: DateTime<Utc>,
     pub pid: Pid,
 }
