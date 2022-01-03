@@ -15,13 +15,13 @@ impl Default for Store {
 }
 
 impl Store {
-    pub fn add(&mut self, name: String, tags: Vec<String>, cadence: Duration) -> usize {
+    pub fn add(&mut self, name: String, tags: &[String], cadence: Duration) -> usize {
         let id = self.items.iter().map(|i| i.id).max().unwrap_or(1);
 
         let item = Item {
             id,
             name,
-            tags,
+            tags: tags.to_vec(),
             cadence,
             pid: Pid::new(1.5, 0.3, 0.1),
         };
@@ -53,7 +53,7 @@ mod tests {
         let item_name = "Gödel, Escher, Bach".to_string();
         let initial_guess = Duration::weeks(2);
 
-        let id = store.add(item_name.clone(), vec![tag.clone()], initial_guess);
+        let id = store.add(item_name.clone(), &[tag.clone()], initial_guess);
         let item = store.get(id).unwrap();
 
         assert_eq!(1, item.id);
