@@ -16,8 +16,8 @@ pub struct AddCommand {
     /// Initial guess on cadence. Don't worry about this being incorrect; we'll
     /// find the right value over time! Supported units: hours (h), days (d),
     /// weeks (w), 30-day months (m), 365-day years (y)
-    #[clap(short, long, default_value = "1d", parse(try_from_str = parse_duration))]
-    cadence: Duration,
+    #[clap(short, long, parse(try_from_str = parse_duration))]
+    cadence: Option<Duration>,
 
     /// When should this next be scheduled?
     #[clap(short, long)] // TODO: should parse a chrono date
@@ -29,7 +29,7 @@ impl AddCommand {
         let id = store.add(
             self.name.join(" "),
             &self.tags,
-            self.cadence,
+            self.get_cadence(),
             self.get_next(Utc::now()),
         );
         println!("{:#?}", store.get(id));
@@ -37,8 +37,12 @@ impl AddCommand {
         Ok(())
     }
 
+    fn get_cadence(&self) -> Duration {
+        self.cadence.unwrap_or(Duration::days(1))
+    }
+
     fn get_next(&self, now: DateTime<Utc>) -> DateTime<Utc> {
-        self.next.unwrap_or_else(|| now + self.cadence)
+        self.next.unwrap_or_else(|| now + self.get_cadence())
     }
 }
 
@@ -46,16 +50,22 @@ impl AddCommand {
 mod test {
     use super::*;
 
+    fn default() -> AddCommand {
+        AddCommand {
+            name: Vec::default(),
+            tags: Vec::default(),
+            cadence: None,
+            next: None,
+        }
+    }
+
     #[test]
     fn uses_next_if_present() {
         let next = Utc::now() + Duration::weeks(1);
 
-        let command = AddCommand {
-            name: vec![],
-            tags: vec![],
-            cadence: Duration::days(1),
-            next: Some(next),
-        };
+        let mut command = default();
+        command.cadence = Some(Duration::days(1));
+        command.next = Some(next);
 
         assert_eq!(next, command.get_next(Utc::now()))
     }
@@ -65,12 +75,9 @@ mod test {
         let now = Utc::now();
         let duration = Duration::days(1);
 
-        let command = AddCommand {
-            name: vec![],
-            tags: vec![],
-            cadence: duration,
-            next: None,
-        };
+        let mut command = default();
+        command.cadence = Some(duration);
+        command.next = None; // just to be explicit
 
         assert_eq!(now + duration, command.get_next(now));
     }
