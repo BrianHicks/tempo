@@ -40,7 +40,11 @@ impl AddCommand {
     }
 
     fn get_cadence(&self, now: DateTime<Utc>) -> Duration {
-        self.cadence.unwrap_or_else(|| self.get_next(now) - now)
+        match (self.cadence, self.next) {
+            (Some(cadence), _) => cadence,
+            (None, Some(_)) => self.get_next(now) - now,
+            (None, None) => Duration::days(1),
+        }
     }
 
     fn get_next(&self, now: DateTime<Utc>) -> DateTime<Utc> {
@@ -103,5 +107,14 @@ mod test {
         command.next = Some(next);
 
         assert_eq!(next - now, command.get_cadence(now));
+    }
+
+    #[test]
+    fn cadence_is_one_day_if_neither_is_present() {
+        let mut command = default();
+        command.cadence = None; // just to be explicit
+        command.next = None; // just to be explicit
+
+        assert_eq!(Duration::days(1), command.get_cadence(Utc::now()))
     }
 }
