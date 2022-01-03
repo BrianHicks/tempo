@@ -1,6 +1,7 @@
 use super::duration::parse_duration;
 use anyhow::Result;
 use chrono::Duration;
+use chrono::{DateTime, Utc};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -19,8 +20,8 @@ pub struct AddCommand {
     cadence: Duration,
 
     /// When should this next be scheduled?
-    #[clap(short, long)]
-    next: Option<String>, // TODO: should be a chrono date or something
+    #[clap(short, long)] // TODO: should parse a chrono date
+    next: Option<DateTime<Utc>>,
 }
 
 impl AddCommand {
@@ -29,5 +30,43 @@ impl AddCommand {
         println!("{:#?}", store.get(id));
 
         Ok(())
+    }
+
+    fn get_next(&self, now: DateTime<Utc>) -> DateTime<Utc> {
+        self.next.unwrap_or_else(|| now + self.cadence)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn uses_next_if_present() {
+        let next = Utc::now() + Duration::weeks(1);
+
+        let command = AddCommand {
+            name: vec![],
+            tags: vec![],
+            cadence: Duration::days(1),
+            next: Some(next),
+        };
+
+        assert_eq!(next, command.get_next(Utc::now()))
+    }
+
+    #[test]
+    fn calculates_next_based_on_cadence() {
+        let now = Utc::now();
+        let duration = Duration::days(1);
+
+        let command = AddCommand {
+            name: vec![],
+            tags: vec![],
+            cadence: duration,
+            next: None,
+        };
+
+        assert_eq!(now + duration, command.get_next(now));
     }
 }
