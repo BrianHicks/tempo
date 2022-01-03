@@ -1,7 +1,6 @@
 use super::duration::parse_duration;
-use anyhow::Result;
-use chrono::Duration;
-use chrono::{DateTime, Utc};
+use anyhow::{Context, Result};
+use chrono::{DateTime, Duration, Utc};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -20,8 +19,14 @@ pub struct AddCommand {
     cadence: Option<Duration>,
 
     /// When should this next be scheduled?
-    #[clap(short, long)] // TODO: should parse a chrono date
+    #[clap(short, long, parse(try_from_str = parse_utc_datetime))]
     next: Option<DateTime<Utc>>,
+}
+
+fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
+    let parsed = DateTime::parse_from_rfc3339(input)
+        .context("failed to parse a date and time in RFC3339 format (YYYY-MM-DDTHH:MM:SS)")?;
+    Ok(parsed.with_timezone(&Utc))
 }
 
 impl AddCommand {
