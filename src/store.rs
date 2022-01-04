@@ -52,6 +52,7 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::TimeZone;
 
     #[test]
     fn add_item() {
