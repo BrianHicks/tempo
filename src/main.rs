@@ -2,6 +2,7 @@ mod cli;
 mod format;
 mod item;
 mod pid;
+mod serde_duration;
 mod store;
 
 use crate::format::Format;
