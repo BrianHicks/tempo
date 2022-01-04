@@ -23,7 +23,7 @@ impl Store {
         cadence: Duration,
         next: DateTime<Utc>,
     ) -> usize {
-        let id = self.items.iter().map(|i| i.id).max().unwrap_or(1);
+        let id = self.next_id();
 
         let item = Item {
             id,
@@ -46,6 +46,15 @@ impl Store {
         }
 
         None
+    }
+
+    pub fn next_id(&self) -> usize {
+        self.items
+            .iter()
+            .map(|i| i.id)
+            .max()
+            .map(|i| i + 1)
+            .unwrap_or(1)
     }
 }
 
@@ -71,5 +80,26 @@ mod tests {
         assert_eq!(vec![tag], item.tags);
         assert_eq!(initial_guess, item.cadence);
         assert_eq!(next, item.next);
+    }
+
+    #[test]
+    fn next_id_empty() {
+        let store = Store::default();
+
+        assert_eq!(1, store.next_id());
+    }
+
+    #[test]
+    fn next_id_incr() {
+        let mut store = Store::default();
+
+        store.add(
+            String::default(),
+            &Vec::default(),
+            Duration::days(1),
+            Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+        );
+
+        assert_eq!(2, store.next_id());
     }
 }
