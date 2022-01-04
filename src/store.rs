@@ -1,6 +1,6 @@
 use crate::item::Item;
 use crate::pid::Pid;
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, Utc};
 
 pub struct Store {
     items: Vec<Item>,
