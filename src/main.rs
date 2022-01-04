@@ -28,25 +28,27 @@ enum Command {
     Add(cli::add::AddCommand),
 }
 
-fn main() {
-    if let Err(err) = try_main() {
-        eprintln!("{:#?}", err);
-        std::process::exit(1);
+impl Opts {
+    fn try_main(&self) -> Result<()> {
+        let store = store::Store::default(); // TODO: load from disk
+
+        match &self.command {
+            Some(Command::Add(add)) => add.run(store, self.format)?,
+
+            None => {
+                println!("{:#?}", self)
+            }
+        };
+
+        Ok(())
     }
 }
 
-fn try_main() -> Result<()> {
+fn main() {
     let opts = Opts::parse();
 
-    let store = store::Store::default(); // TODO: load from disk
-
-    match opts.command {
-        Some(Command::Add(add)) => add.run(store, opts.format)?,
-
-        None => {
-            println!("{:#?}", opts)
-        }
-    };
-
-    Ok(())
+    if let Err(err) = opts.try_main() {
+        eprintln!("{:#?}", err);
+        std::process::exit(1);
+    }
 }
