@@ -1,6 +1,6 @@
 use super::duration::parse_duration;
-use anyhow::{anyhow, bail, Context, Result};
-use chrono::{DateTime, Duration, TimeZone, Utc, Weekday};
+use anyhow::{Context, Result};
+use chrono::{DateTime, Duration, TimeZone, Utc};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -24,31 +24,9 @@ pub struct AddCommand {
 }
 
 fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
-    let parsed = iso8601::date(input).map_err(|err| anyhow!(err)).context(
-        "failed to parse a date and time in IS08601 format (YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, etc)",
-    )?;
-
-    // TODO: use the X_opt version of each constructor
-    let date = match parsed {
-        iso8601::Date::YMD { year, month, day } => Utc.ymd(year, month, day),
-        iso8601::Date::Week { year, ww, d } => Utc.isoywd(
-            year,
-            ww,
-            match d {
-                1 => Weekday::Mon,
-                2 => Weekday::Tue,
-                3 => Weekday::Wed,
-                4 => Weekday::Thu,
-                5 => Weekday::Fri,
-                6 => Weekday::Sat,
-                7 => Weekday::Sun,
-                _ => bail!("the only valid weekdays are 1-7"),
-            },
-        ),
-        iso8601::Date::Ordinal { year, ddd } => Utc.yo(year, ddd),
-    };
-
-    Ok(date.and_hms(0, 0, 0))
+    Utc.datetime_from_str(input, "%Y-%m-%dT%H:%M:%S")
+        .or_else(|_| Utc.datetime_from_str(&format!("{}T00:00:00", input), "%Y-%m-%dT%H:%M:%S"))
+        .context("couldn't parse a date")
 }
 
 impl AddCommand {
