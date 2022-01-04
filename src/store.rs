@@ -2,6 +2,7 @@ use crate::item::Item;
 use crate::pid::Pid;
 use chrono::{DateTime, Duration, Utc};
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Store {
     items: Vec<Item>,
 }

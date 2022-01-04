@@ -1,7 +1,7 @@
 use crate::pid::Pid;
 use chrono::{DateTime, Duration, Utc};
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Item {
     pub id: usize,
     pub name: String,

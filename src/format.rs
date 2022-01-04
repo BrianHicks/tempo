@@ -1,4 +1,4 @@
-#[derive(clap::ArgEnum, Clone, Debug)]
+#[derive(clap::ArgEnum, Clone, Copy, Debug)]
 pub enum Format {
     Human,
     Json,
