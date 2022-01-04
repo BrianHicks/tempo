@@ -11,5 +11,6 @@ pub struct Item {
     #[serde(with = "crate::serde_duration")]
     pub cadence: Duration,
     pub next: DateTime<Utc>,
+    #[serde(flatten)]
     pub pid: Pid,
 }
