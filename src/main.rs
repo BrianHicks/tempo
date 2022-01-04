@@ -38,17 +38,17 @@ enum Command {
 
 impl Opts {
     fn try_main(&self) -> Result<()> {
-        let store = self.get_store().context("couldn't get a store")?;
+        let mut store = self.get_store().context("couldn't get a store")?;
 
         match &self.command {
-            Some(Command::Add(add)) => add.run(store, self.format)?,
+            Some(Command::Add(add)) => add.run(&mut store, self.format)?,
 
             None => {
                 println!("{:#?}", self)
             }
         };
 
-        Ok(())
+        self.save_store(&store)
     }
 
     fn get_store(&self) -> Result<store::Store> {
@@ -57,12 +57,21 @@ impl Opts {
         if !path.exists() {
             Ok(store::Store::default())
         } else {
-            let source = std::fs::read_to_string(&path)
+            let content = std::fs::read_to_string(&path)
                 .with_context(|| format!("couldn't read from {}", path.display()))?;
 
-            toml::from_str(&source)
+            toml::from_str(&content)
                 .with_context(|| format!("couldn't decode a store from {}", path.display()))
         }
+    }
+
+    fn save_store(&self, store: &store::Store) -> Result<()> {
+        let content =
+            toml::to_string_pretty(store).context("couldn't serialize the store to TOML")?;
+
+        let path = self.get_store_path().context("couldn't get a store path")?;
+        std::fs::write(&path, content)
+            .with_context(|| format!("couldn't write store to {}", path.display()))
     }
 
     fn get_store_path(&self) -> Result<PathBuf> {

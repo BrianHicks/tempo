@@ -31,7 +31,7 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 }
 
 impl AddCommand {
-    pub fn run(&self, mut store: crate::store::Store, format: Format) -> Result<()> {
+    pub fn run(&self, store: &mut crate::store::Store, format: Format) -> Result<()> {
         let now = Utc::now();
 
         let id = store.add(
