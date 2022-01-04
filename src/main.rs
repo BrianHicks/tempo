@@ -15,6 +15,9 @@ struct Opts {
     #[clap(subcommand)]
     command: Option<Command>,
 
+    /// How to format the output. If you're just using this on the command line,
+    /// you'll probably be fine with never touching this. If you're integrating
+    /// with another system, however, you might want to use the JSON output.
     #[clap(long, short, arg_enum, default_value = "human")]
     format: Format,
 }
