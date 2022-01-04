@@ -1,16 +1,21 @@
-use anyhow::Result;
-use clap::Parser;
-
 mod cli;
+mod format;
 mod item;
 mod pid;
 mod store;
+
+use crate::format::Format;
+use anyhow::Result;
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Opts {
     #[clap(subcommand)]
     command: Option<Command>,
+
+    #[clap(long, short, arg_enum, default_value = "human")]
+    format: Format,
 }
 
 #[derive(Parser, Debug)]
@@ -32,7 +37,7 @@ fn try_main() -> Result<()> {
     let store = store::Store::default(); // TODO: load from disk
 
     match opts.command {
-        Some(Command::Add(add)) => add.run(store)?,
+        Some(Command::Add(add)) => add.run(store, opts.format)?,
 
         None => {
             println!("{:#?}", opts)

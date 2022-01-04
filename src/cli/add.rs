@@ -1,4 +1,5 @@
 use super::duration::parse_duration;
+use crate::format::Format;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, TimeZone, Utc};
 use clap::Parser;
@@ -30,7 +31,7 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 }
 
 impl AddCommand {
-    pub fn run(&self, mut store: crate::store::Store) -> Result<()> {
+    pub fn run(&self, mut store: crate::store::Store, format: Format) -> Result<()> {
         let now = Utc::now();
 
         let id = store.add(
@@ -39,7 +40,11 @@ impl AddCommand {
             self.get_cadence(now),
             self.get_next(now),
         );
-        println!("{:#?}", store.get(id));
+
+        match format {
+            Format::Human => println!("Added with ID {}", id),
+            Format::Json => todo!("JSON formatting"),
+        }
 
         Ok(())
     }
