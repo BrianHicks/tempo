@@ -57,8 +57,14 @@ impl Opts {
         let path = self.get_store_path().context("couldn't get a store path")?;
 
         if !path.exists() {
+            log::debug!(
+                "the store path ({}) didn't exist; using an empty default",
+                path.display()
+            );
             Ok(store::Store::default())
         } else {
+            log::debug!("reading {} as the store", path.display());
+
             let content = std::fs::read_to_string(&path)
                 .with_context(|| format!("couldn't read from {}", path.display()))?;
 
@@ -90,6 +96,8 @@ impl Opts {
 
 fn main() {
     let opts = Opts::parse();
+
+    env_logger::init();
 
     if let Err(err) = opts.try_main() {
         eprintln!("{:?}", err);
