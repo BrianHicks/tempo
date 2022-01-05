@@ -31,7 +31,7 @@ impl Store {
             tags: tags.to_vec(),
             cadence,
             next,
-            pid: Pid::new(1.5, 0.3, 0.1),
+            pid: Pid::default(),
         };
 
         let id = self.next_id.to_string();

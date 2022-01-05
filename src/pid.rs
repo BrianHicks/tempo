@@ -1,3 +1,7 @@
+static DEFAULT_PROPORTIONAL_FACTOR: f64 = 1.5;
+static DEFAULT_INTEGRAL_FACTOR: f64 = 0.3;
+static DEFAULT_DERIVATIVE_FACTOR: f64 = 0.1;
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Pid {
     proportional_factor: f64,
@@ -7,6 +11,16 @@ pub struct Pid {
 
     last_error: f64,
     derivative_factor: f64,
+}
+
+impl Default for Pid {
+    fn default() -> Pid {
+        Pid::new(
+            DEFAULT_PROPORTIONAL_FACTOR,
+            DEFAULT_INTEGRAL_FACTOR,
+            DEFAULT_DERIVATIVE_FACTOR,
+        )
+    }
 }
 
 impl Pid {
