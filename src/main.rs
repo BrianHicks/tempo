@@ -49,13 +49,14 @@ impl Opts {
 
         println!(
             "{:#?}",
-            conn.execute(
-                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?)",
+            conn.query_row(
+                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?) RETURNING id, text",
                 params![
                     "Test",
                     Cadence::hours(1),
                     Utc.ymd(2022, 01, 05).and_hms(16, 04, 00)
                 ],
+                |row| Ok((row.get::<_, usize>(0)?, row.get::<_, String>(1)?)),
             )
         );
 
