@@ -5,6 +5,7 @@ mod format;
 use crate::format::Format;
 use anyhow::{Context, Result};
 use clap::Parser;
+use rusqlite::Connection;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -19,12 +20,12 @@ struct Opts {
     #[clap(long, short, arg_enum, default_value = "human")]
     format: Format,
 
-    /// Where to store config and data about items and their repeats. If absent,
-    /// we'll figure out the right place for this based on the platform you're
-    /// running (e.g. Linux will use the XDG specification, macOS will put stuff
-    /// in `~/Application Support`, etc.)
-    #[clap(long, short, env = "TEMPO_STORE_PATH")]
-    store_path: Option<PathBuf>,
+    /// Where to store the Tempo database. If absent, we'll figure out the
+    /// right place for this based on the platform you're running (e.g. Linux
+    /// will use the XDG specification, macOS will put stuff in `~/Application
+    /// Support`, etc.)
+    #[clap(long, short, env = "TEMPO_DB_PATH")]
+    db_path: Option<PathBuf>,
 }
 
 #[derive(Parser, Debug)]
@@ -38,7 +39,10 @@ enum Command {
 
 impl Opts {
     fn try_main(&self) -> Result<()> {
-        println!("tmp: {}", self.get_store_path()?.display());
+        let mut conn = self.get_store()?;
+        embedded::migrations::runner()
+            .run(&mut conn)
+            .context("couldn't migrate the database's data!")?;
 
         match &self.command {
             Some(Command::Add(add)) => add.run(self.format),
@@ -52,16 +56,27 @@ impl Opts {
         }
     }
 
-    fn get_store_path(&self) -> Result<PathBuf> {
-        if let Some(explicit) = &self.store_path {
+    fn get_store(&self) -> Result<Connection> {
+        let path = self
+            .get_db_path()
+            .context("couldn't get the database path")?;
+        Connection::open(path).context("couldn't open the database")
+    }
+
+    fn get_db_path(&self) -> Result<PathBuf> {
+        if let Some(explicit) = &self.db_path {
             return Ok(explicit.to_path_buf());
         }
 
         let dirs = directories::ProjectDirs::from("zone", "bytes", "tempo")
-            .context("couldn't load HOME (set --store-path explicitly to get around this.)")?;
+            .context("couldn't load HOME (set --db-path explicitly to get around this.)")?;
 
-        Ok(dirs.data_dir().join("tempo.toml"))
+        Ok(dirs.data_dir().join("tempo.sqlite3"))
     }
+}
+
+mod embedded {
+    refinery::embed_migrations!("migrations");
 }
 
 fn main() {
