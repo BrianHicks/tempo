@@ -34,6 +34,9 @@ struct Opts {
 enum Command {
     /// Add a new item to the store
     Add(cli::add::AddCommand),
+
+    /// Finish a scheduled item
+    Finish(cli::finish::FinishCommand),
 }
 
 impl Opts {
@@ -43,6 +46,11 @@ impl Opts {
         match &self.command {
             Some(Command::Add(add)) => {
                 add.run(&mut store, self.format)?;
+                self.save_store(&store)
+            }
+
+            Some(Command::Finish(finish)) => {
+                finish.run(&mut store, self.format)?;
                 self.save_store(&store)
             }
 
