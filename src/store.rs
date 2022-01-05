@@ -44,6 +44,10 @@ impl Store {
     pub fn get(&self, id: &str) -> Option<&Item> {
         self.items.get(id)
     }
+
+    pub fn get_mut(&mut self, id: &str) -> Option<&mut Item> {
+        self.items.get_mut(id)
+    }
 }
 
 #[cfg(test)]
