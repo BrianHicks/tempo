@@ -41,14 +41,16 @@ impl Opts {
         let mut store = self.get_store().context("couldn't get a store")?;
 
         match &self.command {
-            Some(Command::Add(add)) => add.run(&mut store, self.format)?,
+            Some(Command::Add(add)) => {
+                add.run(&mut store, self.format)?;
+                self.save_store(&store)
+            }
 
             None => {
-                println!("{:#?}", self)
+                println!("{:#?}", self);
+                Ok(())
             }
-        };
-
-        self.save_store(&store)
+        }
     }
 
     fn get_store(&self) -> Result<store::Store> {
