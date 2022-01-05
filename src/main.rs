@@ -45,16 +45,13 @@ impl Opts {
 
         match &self.command {
             Some(Command::Add(add)) => {
-                add.run(&mut store, self.format)
-                    .context("couldn't add this item")?;
+                add.run(&mut store, self.format)?;
                 self.save_store(&store)
                     .context("couldn't save the store after adding this item")
             }
 
             Some(Command::Finish(finish)) => {
-                finish
-                    .run(&mut store, self.format)
-                    .context("couldn't finish this item")?;
+                finish.run(&mut store, self.format)?;
                 self.save_store(&store)
                     .context("couldn't save the store after finishing this item")
             }
