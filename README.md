@@ -27,6 +27,48 @@ Let's have some examples:
 - Want to stay up on interesting topics?
   Prompt yourself: "find developments about […]", or just "go check this site for interesting things about […]".
 
+## How do I use it?
+
+To start with, add an item:
+
+```bash
+$ tempo add "What are my strengths? How can I use them?" --tags journaling
+Added with ID 1
+```
+
+Then, after some time passes, you can then pull the things that are due:
+
+```bash
+$ tempo pull
+| ID | Prompt                                     | Tags       |
+|----|--------------------------------------------|------------|
+| 1  | What are my strengths? How can I use them? | journaling |
+```
+
+(nb. the output format may change here, and you can get a machine-readable format of any command output by passing `--format json` before the subcommand.)
+
+Then you do the prompt—whatever it means for that particular prompt—and tell the system you've completed it.
+You can give feedback on the cadence at the same time by passing `--too-early`, `--too-late`, etc (see the `--help` output.)
+
+```bash
+$ tempo finish 1 --too-late
+Finished 1, scheduled next 3 weeks from now (20XX-12-30)
+```
+
+You can also say that it was too early or too late to complete the task (again, whatever that means to you!)
+
+```bash
+$ tempo reschedule 1 --too-early
+Rescheduled 1, added an additional 3 days (now scheduled 20XX-12-30)
+```
+
+Or drop it entirely:
+
+```bash
+$ tempo drop 1
+Dropped 1
+```
+
 ## How Does it Work?
 
 Every item in Tempo has a cadence and a next due date (you can specify both of these when adding an item, and guesses are fine!)
