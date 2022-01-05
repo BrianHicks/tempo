@@ -1,11 +1,13 @@
+mod cadence;
 mod cli;
 mod format;
 // mod serde_duration;
 
+use crate::cadence::Cadence;
 use crate::format::Format;
 use anyhow::{Context, Result};
 use clap::Parser;
-use rusqlite::Connection;
+use rusqlite::{params, Connection};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -43,6 +45,14 @@ impl Opts {
         embedded::migrations::runner()
             .run(&mut conn)
             .context("couldn't migrate the database's data!")?;
+
+        println!(
+            "{:#?}",
+            conn.execute(
+                "INSERT INTO items (text, cadence) VALUES (?, ?)",
+                params!["Test", Cadence::hours(1)],
+            )
+        );
 
         match &self.command {
             Some(Command::Add(add)) => add.run(self.format),
