@@ -3,7 +3,6 @@ use chrono::{DateTime, Duration, Utc};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Item {
-    pub id: usize,
     pub name: String,
     pub tags: Vec<String>,
 

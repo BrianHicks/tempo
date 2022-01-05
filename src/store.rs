@@ -1,16 +1,19 @@
 use crate::item::Item;
 use crate::pid::Pid;
 use chrono::{DateTime, Duration, Utc};
+use std::collections::HashMap;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Store {
-    items: Vec<Item>,
+    next_id: usize,
+    items: HashMap<String, Item>,
 }
 
 impl Default for Store {
     fn default() -> Store {
         Store {
-            items: Vec::default(),
+            next_id: 1,
+            items: HashMap::default(),
         }
     }
 }
@@ -22,11 +25,8 @@ impl Store {
         tags: &[String],
         cadence: Duration,
         next: DateTime<Utc>,
-    ) -> usize {
-        let id = self.next_id();
-
+    ) -> String {
         let item = Item {
-            id,
             name,
             tags: tags.to_vec(),
             cadence,
@@ -34,27 +34,15 @@ impl Store {
             pid: Pid::new(1.5, 0.3, 0.1),
         };
 
-        self.items.push(item);
+        let id = self.next_id.to_string();
+        self.items.insert(id.clone(), item);
+        self.next_id += 1;
+
         id
     }
 
-    pub fn get(&self, id: usize) -> Option<&Item> {
-        for item in &self.items {
-            if item.id == id {
-                return Some(item);
-            }
-        }
-
-        None
-    }
-
-    pub fn next_id(&self) -> usize {
-        self.items
-            .iter()
-            .map(|i| i.id)
-            .max()
-            .map(|i| i + 1)
-            .unwrap_or(1)
+    pub fn get(&self, id: String) -> Option<&Item> {
+        self.items.get(&id)
     }
 }
 
@@ -75,7 +63,6 @@ mod tests {
         let id = store.add(item_name.clone(), &[tag.clone()], initial_guess, next);
         let item = store.get(id).unwrap();
 
-        assert_eq!(1, item.id);
         assert_eq!(item_name, item.name);
         assert_eq!(vec![tag], item.tags);
         assert_eq!(initial_guess, item.cadence);
@@ -86,7 +73,7 @@ mod tests {
     fn next_id_empty() {
         let store = Store::default();
 
-        assert_eq!(1, store.next_id());
+        assert_eq!(1, store.next_id);
     }
 
     #[test]
@@ -100,6 +87,6 @@ mod tests {
             Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
         );
 
-        assert_eq!(2, store.next_id());
+        assert_eq!(2, store.next_id);
     }
 }
