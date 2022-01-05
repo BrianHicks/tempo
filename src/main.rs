@@ -6,6 +6,7 @@ mod format;
 use crate::cadence::Cadence;
 use crate::format::Format;
 use anyhow::{Context, Result};
+use chrono::{TimeZone, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
 use std::path::PathBuf;
@@ -49,8 +50,12 @@ impl Opts {
         println!(
             "{:#?}",
             conn.execute(
-                "INSERT INTO items (text, cadence) VALUES (?, ?)",
-                params!["Test", Cadence::hours(1)],
+                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?)",
+                params![
+                    "Test",
+                    Cadence::hours(1),
+                    Utc.ymd(2022, 01, 05).and_hms(16, 04, 00)
+                ],
             )
         );
 

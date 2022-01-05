@@ -8,6 +8,7 @@ pub fn migration() -> String {
         t.add_column("id", types::primary());
         t.add_column("text", types::text());
         t.add_column("cadence", types::integer());
+        t.add_column("next", types::datetime());
     });
 
     m.make::<Sqlite>()
