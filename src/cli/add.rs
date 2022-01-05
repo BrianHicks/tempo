@@ -1,6 +1,6 @@
 use super::duration::parse_duration;
 use crate::format::Format;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, TimeZone, Utc};
 use clap::Parser;
 
@@ -31,27 +31,9 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 }
 
 impl AddCommand {
-    pub fn run(&self, store: &mut crate::store::Store, format: Format) -> Result<()> {
-        let now = Utc::now();
-
-        let id = store.add(
-            self.name.join(" "),
-            &self.tags,
-            self.get_cadence(now),
-            self.get_next(now),
-        );
-
-        match format {
-            Format::Human => println!("Added with ID {}", id),
-            Format::Json => {
-                match store.get(&id) {
-                    None => bail!("something has gone terribly wrong! I can't get the data back I just added. Please report this as a bug!"),
-                    Some(item) => println!("{}", serde_json::to_string(&item).context("could not serialize an item to JSON")?),
-                }
-            }
-        }
-
-        Ok(())
+    pub fn run(&self, _format: Format) -> Result<()> {
+        println!("tmp: {}", self.get_cadence(Utc::now()));
+        todo!("reimplement AddCommand.run")
     }
 
     fn get_cadence(&self, now: DateTime<Utc>) -> Duration {

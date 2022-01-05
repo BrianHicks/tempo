@@ -1,9 +1,6 @@
 mod cli;
 mod format;
-mod item;
-mod pid;
-mod serde_duration;
-mod store;
+// mod serde_duration;
 
 use crate::format::Format;
 use anyhow::{Context, Result};
@@ -41,55 +38,18 @@ enum Command {
 
 impl Opts {
     fn try_main(&self) -> Result<()> {
-        let mut store = self.get_store().context("couldn't get a store")?;
+        println!("tmp: {}", self.get_store_path()?.display());
 
         match &self.command {
-            Some(Command::Add(add)) => {
-                add.run(&mut store, self.format)?;
-                self.save_store(&store)
-                    .context("couldn't save the store after adding this item")
-            }
+            Some(Command::Add(add)) => add.run(self.format),
 
-            Some(Command::Finish(finish)) => {
-                finish.run(&mut store, self.format)?;
-                self.save_store(&store)
-                    .context("couldn't save the store after finishing this item")
-            }
+            Some(Command::Finish(finish)) => finish.run(self.format),
 
             None => {
                 println!("{:#?}", self);
-                Ok(())
+                todo!("implement no-subcommand case in Opts.try_main");
             }
         }
-    }
-
-    fn get_store(&self) -> Result<store::Store> {
-        let path = self.get_store_path().context("couldn't get a store path")?;
-
-        if !path.exists() {
-            log::debug!(
-                "the store path ({}) didn't exist; using an empty default",
-                path.display()
-            );
-            Ok(store::Store::default())
-        } else {
-            log::debug!("reading {} as the store", path.display());
-
-            let content = std::fs::read_to_string(&path)
-                .with_context(|| format!("couldn't read from {}", path.display()))?;
-
-            toml::from_str(&content)
-                .with_context(|| format!("couldn't decode a store from {}", path.display()))
-        }
-    }
-
-    fn save_store(&self, store: &store::Store) -> Result<()> {
-        let content =
-            toml::to_string_pretty(store).context("couldn't serialize the store to TOML")?;
-
-        let path = self.get_store_path().context("couldn't get a store path")?;
-        std::fs::write(&path, content)
-            .with_context(|| format!("couldn't write store to {}", path.display()))
     }
 
     fn get_store_path(&self) -> Result<PathBuf> {
