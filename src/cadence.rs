@@ -1,3 +1,6 @@
+use chrono::{DateTime, Duration, TimeZone};
+use core::convert::From;
+use core::ops::Add;
 use core::str::FromStr;
 use rusqlite::{
     types::{FromSql, FromSqlError, ToSqlOutput, Value, ValueRef},
@@ -5,34 +8,74 @@ use rusqlite::{
 };
 use thiserror::Error;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Cadence {
+    years: i64,
+    months: i64,
+    days: i64,
+    hours: i64,
     minutes: i64,
 }
 
 impl Cadence {
     pub fn minutes(minutes: i64) -> Cadence {
-        Cadence { minutes }
+        Cadence {
+            years: 0,
+            months: 0,
+            days: 0,
+            hours: 0,
+            minutes,
+        }
     }
 
     pub fn hours(hours: i64) -> Cadence {
-        Self::minutes(hours * 60)
+        Cadence {
+            years: 0,
+            months: 0,
+            days: 0,
+            hours,
+            minutes: 0,
+        }
     }
 
     pub fn days(days: i64) -> Cadence {
-        Self::hours(days * 24)
+        Cadence {
+            years: 0,
+            months: 0,
+            days,
+            hours: 0,
+            minutes: 0,
+        }
     }
 
     pub fn weeks(weeks: i64) -> Cadence {
-        Self::days(weeks * 7)
+        Cadence {
+            years: 0,
+            months: 0,
+            days: weeks * 7,
+            hours: 0,
+            minutes: 0,
+        }
     }
 
     pub fn months(months: i64) -> Cadence {
-        Self::days(months * 30)
+        Cadence {
+            years: 0,
+            months,
+            days: 0,
+            hours: 0,
+            minutes: 0,
+        }
     }
 
     pub fn years(years: i64) -> Cadence {
-        Self::days(years * 365)
+        Cadence {
+            years,
+            months: 0,
+            days: 0,
+            hours: 0,
+            minutes: 0,
+        }
     }
 }
 
@@ -118,47 +161,73 @@ pub enum ParseError {
     ExtraStuff,
 }
 
+impl<TZ: TimeZone> Add<DateTime<TZ>> for Cadence {
+    type Output = DateTime<TZ>;
+
+    fn add(self, _dt: Self::Output) -> Self::Output {
+        todo!("adding for cadence")
+    }
+}
+
+impl<TZ: TimeZone> Add<Cadence> for DateTime<TZ> {
+    type Output = DateTime<TZ>;
+
+    fn add(self, cadence: Cadence) -> Self::Output {
+        cadence + self
+    }
+}
+
+impl From<Duration> for Cadence {
+    fn from(_duration: Duration) -> Cadence {
+        todo!("conversion from Duration to Cadence")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn parse_duration_hours() {
-        assert_eq!(Cadence::hours(1), Cadence::from_str("1h").unwrap());
-    }
+    mod from_str {
+        use super::*;
 
-    #[test]
-    fn parse_duration_multiple() {
-        assert_eq!(Cadence::hours(24), Cadence::from_str("24h").unwrap());
-    }
+        #[test]
+        fn parse_duration_hours() {
+            assert_eq!(Cadence::hours(1), Cadence::from_str("1h").unwrap());
+        }
 
-    #[test]
-    fn parse_duration_days() {
-        assert_eq!(Cadence::days(1), Cadence::from_str("1d").unwrap());
-    }
+        #[test]
+        fn parse_duration_multiple() {
+            assert_eq!(Cadence::hours(24), Cadence::from_str("24h").unwrap());
+        }
 
-    #[test]
-    fn parse_duration_weeks() {
-        assert_eq!(Cadence::weeks(1), Cadence::from_str("1w").unwrap());
-    }
+        #[test]
+        fn parse_duration_days() {
+            assert_eq!(Cadence::days(1), Cadence::from_str("1d").unwrap());
+        }
 
-    #[test]
-    fn parse_duration_months() {
-        assert_eq!(Cadence::days(30), Cadence::from_str("1m").unwrap());
-    }
+        #[test]
+        fn parse_duration_weeks() {
+            assert_eq!(Cadence::weeks(1), Cadence::from_str("1w").unwrap());
+        }
 
-    #[test]
-    fn parse_duration_years() {
-        assert_eq!(Cadence::days(365), Cadence::from_str("1y").unwrap());
-    }
+        #[test]
+        fn parse_duration_months() {
+            assert_eq!(Cadence::months(1), Cadence::from_str("1m").unwrap());
+        }
 
-    #[test]
-    fn parse_duration_extra() {
-        assert!(Cadence::from_str("1dd").is_err());
-    }
+        #[test]
+        fn parse_duration_years() {
+            assert_eq!(Cadence::years(1), Cadence::from_str("1y").unwrap());
+        }
 
-    #[test]
-    fn parse_duration_leading() {
-        assert!(Cadence::from_str("d").is_err());
+        #[test]
+        fn parse_duration_extra() {
+            assert!(Cadence::from_str("1dd").is_err());
+        }
+
+        #[test]
+        fn parse_duration_leading() {
+            assert!(Cadence::from_str("d").is_err());
+        }
     }
 }

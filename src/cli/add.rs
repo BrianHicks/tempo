@@ -1,7 +1,7 @@
 use crate::cadence::Cadence;
 use crate::format::Format;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -32,15 +32,14 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 
 impl AddCommand {
     pub fn run(&self, _format: Format) -> Result<()> {
-        println!("tmp: {}", self.get_cadence(Utc::now()));
         todo!("reimplement AddCommand.run")
     }
 
     fn get_cadence(&self, now: DateTime<Utc>) -> Cadence {
         match (self.cadence, self.next) {
             (Some(cadence), _) => cadence,
-            (None, Some(_)) => self.get_next(now) - now,
-            (None, None) => Duration::days(1),
+            (None, Some(_)) => (self.get_next(now) - now).into(),
+            (None, None) => Cadence::days(1),
         }
     }
 
@@ -64,7 +63,7 @@ mod test {
 
     #[test]
     fn next_is_used() {
-        let next = Utc::now() + Duration::weeks(1);
+        let next = Utc::now() + Cadence::weeks(1);
 
         let mut command = default();
         command.next = Some(next);
@@ -75,18 +74,18 @@ mod test {
     #[test]
     fn next_is_calculated_based_on_cadence() {
         let now = Utc::now();
-        let duration = Duration::days(1);
+        let cadence = Cadence::days(1);
 
         let mut command = default();
-        command.cadence = Some(duration);
+        command.cadence = Some(cadence);
         command.next = None; // just to be explicit
 
-        assert_eq!(now + duration, command.get_next(now));
+        assert_eq!(now + cadence, command.get_next(now));
     }
 
     #[test]
     fn cadence_is_used() {
-        let cadence = Duration::weeks(1);
+        let cadence = Cadence::weeks(1);
 
         let mut command = default();
         command.cadence = Some(cadence);
@@ -97,13 +96,13 @@ mod test {
     #[test]
     fn cadence_is_calculated_based_on_next() {
         let now = Utc::now();
-        let next = now + Duration::weeks(1);
+        let next = now + Cadence::weeks(1);
 
         let mut command = default();
         command.cadence = None; // just to be explicit
         command.next = Some(next);
 
-        assert_eq!(next - now, command.get_cadence(now));
+        assert_eq!(Cadence::from(next - now), command.get_cadence(now));
     }
 
     #[test]
@@ -112,6 +111,6 @@ mod test {
         command.cadence = None; // just to be explicit
         command.next = None; // just to be explicit
 
-        assert_eq!(Duration::days(1), command.get_cadence(Utc::now()))
+        assert_eq!(Cadence::days(1), command.get_cadence(Utc::now()))
     }
 }
