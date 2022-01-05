@@ -108,3 +108,7 @@ Basically, instead of subtracting the current value from the target value to get
 
 A "too early" or "too late" might be an error value of something like 1 day, where "way to early" or "way to late" may be like 3 days.
 Because of the way we weight the PID components, small adjustments over time result in approaching the optimum cadence (or at least that's the idea.)
+
+## Acknowledgements
+
+I took lots of inspiration for this tool from [Andy Matuschak's notes on spaced repetition](https://notes.andymatuschak.org/z2gqazXUkf9qyFjMQg4W3dw6yegnAJszvDywN).
