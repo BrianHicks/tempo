@@ -84,8 +84,7 @@ impl Opts {
         let dirs = directories::ProjectDirs::from("zone", "bytes", "tempo")
             .context("couldn't load HOME (set --store-path explicitly to get around this.)")?;
 
-        // Note: YAML might not be the final format. TOML also seems promising?
-        Ok(dirs.data_dir().join("tempo.yaml"))
+        Ok(dirs.data_dir().join("tempo.toml"))
     }
 }
 
