@@ -1,4 +1,4 @@
-use super::duration::parse_duration;
+use crate::cadence::Cadence;
 use crate::format::Format;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, TimeZone, Utc};
@@ -16,8 +16,8 @@ pub struct AddCommand {
     /// Initial guess on cadence. Don't worry about this being incorrect; we'll
     /// find the right value over time! Supported units: hours (h), days (d),
     /// weeks (w), 30-day months (m), 365-day years (y)
-    #[clap(short, long, parse(try_from_str = parse_duration))]
-    cadence: Option<Duration>,
+    #[clap(short, long)]
+    cadence: Option<Cadence>,
 
     /// When should this next be scheduled?
     #[clap(short, long, parse(try_from_str = parse_utc_datetime))]
@@ -36,7 +36,7 @@ impl AddCommand {
         todo!("reimplement AddCommand.run")
     }
 
-    fn get_cadence(&self, now: DateTime<Utc>) -> Duration {
+    fn get_cadence(&self, now: DateTime<Utc>) -> Cadence {
         match (self.cadence, self.next) {
             (Some(cadence), _) => cadence,
             (None, Some(_)) => self.get_next(now) - now,
