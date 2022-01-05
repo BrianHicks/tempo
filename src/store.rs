@@ -41,8 +41,8 @@ impl Store {
         id
     }
 
-    pub fn get(&self, id: String) -> Option<&Item> {
-        self.items.get(&id)
+    pub fn get(&self, id: &str) -> Option<&Item> {
+        self.items.get(id)
     }
 }
 
@@ -61,7 +61,7 @@ mod tests {
         let next = Utc.ymd(2022, 01, 01).and_hms(0, 0, 0);
 
         let id = store.add(item_name.clone(), &[tag.clone()], initial_guess, next);
-        let item = store.get(id).unwrap();
+        let item = store.get(&id).unwrap();
 
         assert_eq!(item_name, item.name);
         assert_eq!(vec![tag], item.tags);

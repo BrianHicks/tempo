@@ -44,7 +44,7 @@ impl AddCommand {
         match format {
             Format::Human => println!("Added with ID {}", id),
             Format::Json => {
-                match store.get(id) {
+                match store.get(&id) {
                     None => bail!("something has gone terribly wrong! I can't get the data back I just added. Please report this as a bug!"),
                     Some(item) => println!("{}", serde_json::to_string(&item).context("could not serialize an item to JSON")?),
                 }
