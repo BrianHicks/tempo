@@ -4,6 +4,7 @@ use anyhow::Result;
 
 #[derive(Debug, clap::Parser)]
 pub struct FinishCommand {
+    /// ID of the item to finish
     id: String,
 }
 
