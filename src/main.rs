@@ -1,5 +1,6 @@
 mod cadence;
 mod cli;
+mod db;
 mod format;
 mod item;
 mod pid;
@@ -42,7 +43,7 @@ enum Command {
 impl Opts {
     fn try_main(&self) -> Result<()> {
         let mut conn = self.get_store()?;
-        embedded::migrations::runner()
+        db::migrations::runner()
             .run(&mut conn)
             .context("couldn't migrate the database's data!")?;
 
@@ -75,10 +76,6 @@ impl Opts {
 
         Ok(dirs.data_dir().join("tempo.sqlite3"))
     }
-}
-
-mod embedded {
-    refinery::embed_migrations!("migrations");
 }
 
 fn main() {
