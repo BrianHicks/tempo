@@ -61,7 +61,13 @@ impl AddCommand {
             )
             .context("could not insert the new row into the database")?;
 
-        println!("{:#?}", item);
+        match format {
+            Format::Human => println!("Added \"{}\" with ID {}", item.text, item.id),
+            Format::Json => println!(
+                "{}",
+                serde_json::to_string(&item).context("could not convert this item to JSON")?
+            ),
+        }
 
         Ok(())
     }
