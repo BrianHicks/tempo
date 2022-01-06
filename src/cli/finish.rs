@@ -1,6 +1,7 @@
 use crate::format::Format;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
+use rusqlite::Connection;
 
 #[derive(Debug, clap::Parser)]
 pub struct FinishCommand {
@@ -29,7 +30,7 @@ pub struct FinishCommand {
 }
 
 impl FinishCommand {
-    pub fn run(&self, _format: Format) -> Result<()> {
+    pub fn run(&self, _conn: &Connection, _format: Format) -> Result<()> {
         todo!("reimplement FinishCommand.run")
     }
 }

@@ -49,7 +49,7 @@ impl Opts {
 
         match &self.command {
             Command::Add(add) => add.run(&conn, self.format),
-            Command::Finish(finish) => finish.run(self.format),
+            Command::Finish(finish) => finish.run(&conn, self.format),
         }
     }
 
