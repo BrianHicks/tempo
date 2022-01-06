@@ -1,5 +1,7 @@
 use crate::cadence::Cadence;
 use crate::format::Format;
+use crate::item::Item;
+use crate::pid::Pid;
 use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
 use clap::Parser;
@@ -34,19 +36,32 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 impl AddCommand {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
         let now = Utc::now();
-        let (id, text, cadence, next): (usize, String, Cadence, DateTime<Utc>) = conn
+
+        let item = conn
             .query_row(
-                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?) RETURNING id, text, cadence, next",
+                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?) RETURNING id, text, cadence, next, proportional_factor, integral, integral_factor, last_error, derivative_factor",
                 params![
                     self.text.join(" "),
                     self.get_cadence(now),
                     self.get_next(now)
                 ],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                |row| Ok(Item{
+                    id: row.get(0)?,
+                    text: row.get(1)?,
+                    cadence: row.get(2)?,
+                    next: row.get(3)?,
+                    pid: Pid {
+                        proportional_factor: row.get(4)?,
+                        integral: row.get(5)?,
+                        integral_factor: row.get(6)?,
+                        last_error: row.get(7)?,
+                        derivative_factor: row.get(8)?,
+                    }
+                }),
             )
             .context("could not insert the new row into the database")?;
 
-        println!("{} {} {:?} {}", id, text, cadence, next);
+        println!("{:#?}", item);
 
         Ok(())
     }

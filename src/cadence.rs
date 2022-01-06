@@ -8,7 +8,7 @@ use rusqlite::{
 };
 use thiserror::Error;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Serialize)]
 pub struct Cadence {
     minutes: i64,
 }

@@ -4,13 +4,14 @@ static DEFAULT_DERIVATIVE_FACTOR: f64 = 0.1;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Pid {
-    proportional_factor: f64,
+    // TODO: make these private again by reading field indexes by name from the query plan
+    pub proportional_factor: f64,
 
-    integral: f64,
-    integral_factor: f64,
+    pub integral: f64,
+    pub integral_factor: f64,
 
-    last_error: f64,
-    derivative_factor: f64,
+    pub last_error: f64,
+    pub derivative_factor: f64,
 }
 
 impl Default for Pid {
