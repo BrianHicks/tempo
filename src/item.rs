@@ -4,7 +4,6 @@ use chrono::{DateTime, Utc};
 
 #[derive(Debug, serde::Serialize)]
 pub struct Item {
-    // TODO: make these private again by reading field indexes by name from the query plan
     pub id: u64,
     pub text: String,
 
