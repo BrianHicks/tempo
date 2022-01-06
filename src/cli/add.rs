@@ -2,7 +2,7 @@ use crate::cadence::Cadence;
 use crate::format::Format;
 use crate::item::Item;
 use crate::pid::Pid;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
@@ -10,6 +10,7 @@ use rusqlite::{params, Connection};
 #[derive(Parser, Debug)]
 pub struct AddCommand {
     /// Text of the item to add
+    #[clap(required(true))]
     text: Vec<String>,
 
     /// What category does this item belong to?
@@ -35,10 +36,6 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 
 impl AddCommand {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
-        if self.text.is_empty() {
-            bail!("I need some text in order to add an item, but I didn't get any")
-        }
-
         let now = Utc::now();
 
         let item = conn
@@ -181,17 +178,6 @@ mod test {
                 .get::<_, String>(0))
                 .expect("failed to query the database")
         )
-    }
-
-    #[test]
-    fn add_requires_text() {
-        let mut command = default();
-        command.text = Vec::default();
-
-        assert_eq!(
-            "I need some text in order to add an item, but I didn't get any",
-            command.run(&conn(), Format::Human).unwrap_err().to_string()
-        );
     }
 
     #[test]
