@@ -9,7 +9,7 @@ pub fn migration() -> String {
         t.add_column("text", types::text());
 
         // scheduling
-        t.add_column("cadence", types::integer());
+        t.add_column("cadence", types::integer().default(1440));
         t.add_column("next", types::datetime());
 
         // PID
