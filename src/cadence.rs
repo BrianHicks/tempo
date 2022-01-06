@@ -10,72 +10,32 @@ use thiserror::Error;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Cadence {
-    years: i64,
-    months: i64,
-    days: i64,
-    hours: i64,
     minutes: i64,
 }
 
 impl Cadence {
     pub fn minutes(minutes: i64) -> Cadence {
-        Cadence {
-            years: 0,
-            months: 0,
-            days: 0,
-            hours: 0,
-            minutes,
-        }
+        Cadence { minutes }
     }
 
     pub fn hours(hours: i64) -> Cadence {
-        Cadence {
-            years: 0,
-            months: 0,
-            days: 0,
-            hours,
-            minutes: 0,
-        }
+        Self::minutes(hours * 60)
     }
 
     pub fn days(days: i64) -> Cadence {
-        Cadence {
-            years: 0,
-            months: 0,
-            days,
-            hours: 0,
-            minutes: 0,
-        }
+        Self::hours(days * 24)
     }
 
     pub fn weeks(weeks: i64) -> Cadence {
-        Cadence {
-            years: 0,
-            months: 0,
-            days: weeks * 7,
-            hours: 0,
-            minutes: 0,
-        }
+        Self::days(weeks * 7)
     }
 
     pub fn months(months: i64) -> Cadence {
-        Cadence {
-            years: 0,
-            months,
-            days: 0,
-            hours: 0,
-            minutes: 0,
-        }
+        Self::days(months * 30)
     }
 
     pub fn years(years: i64) -> Cadence {
-        Cadence {
-            years,
-            months: 0,
-            days: 0,
-            hours: 0,
-            minutes: 0,
-        }
+        Self::days(years * 365)
     }
 }
 
@@ -164,8 +124,8 @@ pub enum ParseError {
 impl<TZ: TimeZone> Add<DateTime<TZ>> for Cadence {
     type Output = DateTime<TZ>;
 
-    fn add(self, _dt: Self::Output) -> Self::Output {
-        todo!("adding for cadence")
+    fn add(self, dt: Self::Output) -> Self::Output {
+        dt + Duration::minutes(self.minutes)
     }
 }
 
@@ -178,8 +138,8 @@ impl<TZ: TimeZone> Add<Cadence> for DateTime<TZ> {
 }
 
 impl From<Duration> for Cadence {
-    fn from(_duration: Duration) -> Cadence {
-        todo!("conversion from Duration to Cadence")
+    fn from(duration: Duration) -> Cadence {
+        Cadence::minutes(duration.num_minutes())
     }
 }
 
