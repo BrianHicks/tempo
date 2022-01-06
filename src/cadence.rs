@@ -137,6 +137,14 @@ impl<TZ: TimeZone> Add<Cadence> for DateTime<TZ> {
     }
 }
 
+impl Add<Cadence> for Cadence {
+    type Output = Cadence;
+
+    fn add(self, other: Self) -> Self {
+        Self::minutes(self.minutes + other.minutes)
+    }
+}
+
 impl From<Duration> for Cadence {
     fn from(duration: Duration) -> Cadence {
         Cadence::minutes(duration.num_minutes())
