@@ -3,12 +3,10 @@ mod cli;
 mod format;
 // mod serde_duration;
 
-use crate::cadence::Cadence;
 use crate::format::Format;
 use anyhow::{Context, Result};
-use chrono::{TimeZone, Utc};
 use clap::Parser;
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -47,21 +45,8 @@ impl Opts {
             .run(&mut conn)
             .context("couldn't migrate the database's data!")?;
 
-        println!(
-            "{:#?}",
-            conn.query_row(
-                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?) RETURNING id, text",
-                params![
-                    "Test",
-                    Cadence::hours(1),
-                    Utc.ymd(2022, 01, 05).and_hms(16, 04, 00)
-                ],
-                |row| Ok((row.get::<_, usize>(0)?, row.get::<_, String>(1)?)),
-            )
-        );
-
         match &self.command {
-            Some(Command::Add(add)) => add.run(self.format),
+            Some(Command::Add(add)) => add.run(&conn, self.format),
 
             Some(Command::Finish(finish)) => finish.run(self.format),
 

@@ -3,11 +3,12 @@ use crate::format::Format;
 use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
 use clap::Parser;
+use rusqlite::{params, Connection};
 
 #[derive(Parser, Debug)]
 pub struct AddCommand {
     /// Text of the item to add
-    name: Vec<String>,
+    text: Vec<String>,
 
     /// What category does this item belong to?
     #[clap(short, long)]
@@ -31,8 +32,23 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 }
 
 impl AddCommand {
-    pub fn run(&self, _format: Format) -> Result<()> {
-        todo!("reimplement AddCommand.run")
+    pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
+        let now = Utc::now();
+        let (id, text, cadence, next): (usize, String, Cadence, DateTime<Utc>) = conn
+            .query_row(
+                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?) RETURNING id, text, cadence, next",
+                params![
+                    self.text.join(" "),
+                    self.get_cadence(now),
+                    self.get_next(now)
+                ],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .context("could not insert the new row into the database")?;
+
+        println!("{} {} {:?} {}", id, text, cadence, next);
+
+        Ok(())
     }
 
     fn get_cadence(&self, now: DateTime<Utc>) -> Cadence {
@@ -54,7 +70,7 @@ mod test {
 
     fn default() -> AddCommand {
         AddCommand {
-            name: Vec::default(),
+            text: Vec::default(),
             tags: Vec::default(),
             cadence: None,
             next: None,
