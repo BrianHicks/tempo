@@ -3,7 +3,7 @@ use crate::format::Format;
 use crate::item::Item;
 use crate::pid::Pid;
 use anyhow::{Context, Result};
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
 
@@ -24,14 +24,8 @@ pub struct AddCommand {
     cadence: Option<Cadence>,
 
     /// When should this next be scheduled?
-    #[clap(short, long, parse(try_from_str = parse_utc_datetime))]
+    #[clap(short, long, parse(try_from_str = super::parse_utc_datetime))]
     next: Option<DateTime<Utc>>,
-}
-
-fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
-    Utc.datetime_from_str(input, "%Y-%m-%dT%H:%M:%S")
-        .or_else(|_| Utc.datetime_from_str(&format!("{}T00:00:00", input), "%Y-%m-%dT%H:%M:%S"))
-        .context("couldn't parse a date")
 }
 
 impl AddCommand {
@@ -89,6 +83,7 @@ impl AddCommand {
 #[cfg(test)]
 mod test {
     use super::*;
+    use chrono::TimeZone;
 
     fn default() -> AddCommand {
         AddCommand {
