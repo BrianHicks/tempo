@@ -15,7 +15,7 @@ use std::path::PathBuf;
 #[clap(about, version, author)]
 struct Opts {
     #[clap(subcommand)]
-    command: Option<Command>,
+    command: Command,
 
     /// How to format the output. If you're just using this on the command line,
     /// you'll probably be fine with never touching this. If you're integrating
@@ -48,14 +48,8 @@ impl Opts {
             .context("couldn't migrate the database's data!")?;
 
         match &self.command {
-            Some(Command::Add(add)) => add.run(&conn, self.format),
-
-            Some(Command::Finish(finish)) => finish.run(self.format),
-
-            None => {
-                println!("{:#?}", self);
-                todo!("implement no-subcommand case in Opts.try_main");
-            }
+            Command::Add(add) => add.run(&conn, self.format),
+            Command::Finish(finish) => finish.run(self.format),
         }
     }
 
