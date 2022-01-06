@@ -2,7 +2,7 @@ use crate::cadence::Cadence;
 use crate::format::Format;
 use crate::item::Item;
 use crate::pid::Pid;
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
@@ -35,6 +35,10 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
 
 impl AddCommand {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
+        if self.text.is_empty() {
+            bail!("I need some text in order to add an item, but I didn't get any")
+        }
+
         let now = Utc::now();
 
         let item = conn
@@ -91,11 +95,20 @@ mod test {
 
     fn default() -> AddCommand {
         AddCommand {
-            text: Vec::default(),
+            text: vec!["Text".into()],
             tags: Vec::default(),
             cadence: None,
             next: None,
         }
+    }
+
+    fn conn() -> Connection {
+        let mut conn = Connection::open_in_memory().expect("couldn't open an in-memory database");
+        crate::db::migrations::runner()
+            .run(&mut conn)
+            .expect("couldn't migrate database");
+
+        conn
     }
 
     #[test]
@@ -149,5 +162,76 @@ mod test {
         command.next = None; // just to be explicit
 
         assert_eq!(Cadence::days(1), command.get_cadence(Utc::now()))
+    }
+
+    #[test]
+    fn adds_specified_text() {
+        let mut command = default();
+        command.text = vec!["Hello,".into(), "world!".into()];
+
+        let conn = conn();
+
+        command
+            .run(&conn, Format::Human)
+            .expect("command should not fail");
+
+        assert_eq!(
+            "Hello, world!".to_string(),
+            conn.query_row("SELECT text FROM items LIMIT 1", [], |row| row
+                .get::<_, String>(0))
+                .expect("failed to query the database")
+        )
+    }
+
+    #[test]
+    fn add_requires_text() {
+        let mut command = default();
+        command.text = Vec::default();
+
+        assert_eq!(
+            "I need some text in order to add an item, but I didn't get any",
+            command.run(&conn(), Format::Human).unwrap_err().to_string()
+        );
+    }
+
+    #[test]
+    fn adds_specified_cadence() {
+        let mut command = default();
+
+        let cadence = Cadence::weeks(1);
+        command.cadence = Some(cadence);
+
+        let conn = conn();
+
+        command
+            .run(&conn, Format::Human)
+            .expect("command should not fail");
+
+        assert_eq!(
+            cadence,
+            conn.query_row("SELECT cadence FROM items LIMIT 1", [], |row| row.get(0))
+                .expect("failed to query the database")
+        )
+    }
+
+    #[test]
+    fn adds_specified_next() {
+        let mut command = default();
+
+        let next = Utc.ymd(2022, 03, 01).and_hms(9, 0, 0);
+        command.next = Some(next);
+
+        let conn = conn();
+
+        command
+            .run(&conn, Format::Human)
+            .expect("command should not fail");
+
+        assert_eq!(
+            next,
+            conn.query_row("SELECT next FROM items LIMIT 1", [], |row| row
+                .get::<_, DateTime<Utc>>(0))
+                .expect("failed to query the database")
+        )
     }
 }
