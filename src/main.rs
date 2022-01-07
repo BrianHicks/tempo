@@ -40,6 +40,9 @@ enum Command {
     /// Add a new item to the store
     Add(cli::add::Command),
 
+    /// Get the items that are ready to go
+    Pull(cli::pull::Command),
+
     /// Edit an existing item
     Edit(cli::edit::Command),
 }
@@ -53,6 +56,7 @@ impl Opts {
 
         match &self.command {
             Command::Add(add) => add.run(&conn, self.format),
+            Command::Pull(pull) => pull.run(&conn, self.format),
             Command::Edit(edit) => edit.run(&conn, self.format),
         }
     }
