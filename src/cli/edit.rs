@@ -65,17 +65,13 @@ impl EditCommand {
     }
 
     fn update_text(&self, conn: &Connection) -> Result<()> {
-        match conn.execute(
-            "UPDATE items SET text = ? WHERE id = ?",
-            params![self.text.join(" "), self.id],
-        ) {
-            Ok(0) => anyhow::bail!("could not update text for ID {} (does it exist?)", self.id),
-            Ok(1) => Ok(()),
-            Ok(_) => anyhow::bail!(
-                "there were somehow multiple rows with the same ID. Please report this as a bug!"
+        self.handle_update(
+            conn.execute(
+                "UPDATE items SET text = ? WHERE id = ?",
+                params![self.text.join(" "), self.id],
             ),
-            Err(problem) => Err(problem).context("there was a problem updating item text"),
-        }
+            "there was a problem updating item text",
+        )
     }
 
     fn update_tag(&self, new_tag: &str, conn: &Connection) -> Result<()> {
