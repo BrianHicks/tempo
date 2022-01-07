@@ -58,7 +58,7 @@ Finished 1, scheduled next 3 weeks from now (20XX-12-30)
 You can also say that it was too early or too late to complete the task (again, whatever that means to you!)
 
 ```bash
-$ tempo edit 1 --too-early
+$ tempo edit 1 --later
 Rescheduled 1, added an additional 3 days (now scheduled 20XX-12-30)
 ```
 
