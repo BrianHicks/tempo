@@ -14,6 +14,7 @@ pub struct Item {
     pub cadence: Cadence,
     pub next: DateTime<Utc>,
     pub last: Option<DateTime<Utc>>,
+    pub added: DateTime<Utc>,
 
     #[serde(flatten)]
     pub pid: Pid,
@@ -30,7 +31,7 @@ pub enum Bump {
 impl Item {
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(
-            "SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, last_error, derivative_factor FROM items WHERE id = ?",
+            "SELECT id, text, tag_id, cadence, next, last, added, proportional_factor, integral, integral_factor, last_error, derivative_factor FROM items WHERE id = ?",
             [id],
             |row| {
                 Ok(Item {
@@ -40,12 +41,13 @@ impl Item {
                     cadence: row.get(3)?,
                     next: row.get(4)?,
                     last: row.get(5)?,
+                    added: row.get(6)?,
                     pid: Pid {
-                        proportional_factor: row.get(6)?,
-                        integral: row.get(7)?,
-                        integral_factor: row.get(8)?,
-                        last_error: row.get(9)?,
-                        derivative_factor: row.get(10)?,
+                        proportional_factor: row.get(7)?,
+                        integral: row.get(8)?,
+                        integral_factor: row.get(9)?,
+                        last_error: row.get(10)?,
+                        derivative_factor: row.get(11)?,
                     },
                 })
             },
@@ -68,6 +70,7 @@ impl Item {
                 self.pid.last_error,
                 self.pid.derivative_factor,
                 self.id,
+                // No added! That field shouldn't ever be updated.
             ]
         ).with_context(|| format!("could not item with ID {}", self.id))?;
 
@@ -105,6 +108,7 @@ mod tests {
             cadence: Cadence::days(1),
             next: Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
             last: None,
+            added: Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
             pid: Pid::default(),
         }
     }

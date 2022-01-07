@@ -136,12 +136,13 @@ mod test {
         conn.execute("INSERT INTO tags (id, name) VALUES (1, \"test\")", [])
             .unwrap();
         conn.execute(
-            "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?)",
+            "INSERT INTO items (text, cadence, next, tag_id, added) VALUES (?, ?, ?, ?, ?)",
             params![
                 "test",
                 Cadence::days(1),
                 Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
-                1
+                1,
+                Utc::now(),
             ],
         )
         .unwrap();
