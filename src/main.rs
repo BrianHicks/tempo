@@ -39,7 +39,7 @@ struct Opts {
 #[derive(Parser, Debug)]
 enum Command {
     /// Add a new item to the store
-    Add(cli::add::AddCommand),
+    Add(cli::add::Command),
 
     /// Edit an existing item
     Edit(cli::edit::Command),

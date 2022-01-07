@@ -8,7 +8,7 @@ use clap::Parser;
 use rusqlite::{params, Connection};
 
 #[derive(Parser, Debug)]
-pub struct AddCommand {
+pub struct Command {
     /// Text of the item to add
     #[clap(required(true))]
     text: Vec<String>,
@@ -28,7 +28,7 @@ pub struct AddCommand {
     next: Option<DateTime<Utc>>,
 }
 
-impl AddCommand {
+impl Command {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
         let now = Utc::now();
 
@@ -84,8 +84,8 @@ mod test {
     use super::*;
     use chrono::TimeZone;
 
-    fn default() -> AddCommand {
-        AddCommand {
+    fn default() -> Command {
+        Command {
             text: vec!["Text".into()],
             tag: None,
             cadence: None,
