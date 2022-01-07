@@ -57,6 +57,8 @@ impl Opts {
         let path = self
             .get_db_path()
             .context("couldn't get the database path")?;
+
+        log::info!("using \"{}\" as the path to the database", path.display());
         Connection::open(path).context("couldn't open the database")
     }
 
