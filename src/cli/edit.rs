@@ -10,7 +10,9 @@ pub struct EditCommand {
     /// ID of the item to edit
     id: usize,
 
-    /// New text to add to the item
+    /// New text to for the item. New text is required if there are no
+    /// other edits in the flags.
+    #[clap(required_unless_present_any(&["tag", "next", "cadence", "earlier", "much-earlier", "later", "much-later"]))]
     text: Vec<String>,
 
     /// Change this item's tag
