@@ -144,7 +144,8 @@ impl Display for Cadence {
                 write!(out, "~{}h", (self.minutes as f64 / HOURS as f64).round())
             }
         } else {
-            write!(out, "<1h")
+            let sign = if self.minutes < 0 { "-" } else { "" };
+            write!(out, "<{}1h", sign)
         }
     }
 }
@@ -249,6 +250,11 @@ mod tests {
 
     mod display {
         use super::*;
+
+        #[test]
+        fn negative() {
+            assert_eq!("<-1h", Cadence::minutes(-1).to_string())
+        }
 
         #[test]
         fn minutes() {
