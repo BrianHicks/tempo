@@ -11,6 +11,7 @@ pub fn migration() -> String {
         // scheduling
         t.add_column("cadence", types::integer().default(1440));
         t.add_column("next", types::datetime());
+        t.add_column("last", types::datetime().nullable(true));
 
         // PID
         t.add_column("proportional_factor", types::float().default(1.5));
