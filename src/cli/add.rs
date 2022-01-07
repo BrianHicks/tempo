@@ -15,7 +15,7 @@ pub struct AddCommand {
 
     /// What category does this item belong to?
     #[clap(short, long)]
-    tags: Vec<String>,
+    tag: Option<String>,
 
     /// Initial guess on cadence. Don't worry about this being incorrect; we'll
     /// find the right value over time! Supported units: hours (h), days (d),
@@ -32,13 +32,29 @@ impl AddCommand {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
         let now = Utc::now();
 
+        let tag_id: Option<u64> = match &self.tag {
+            Some(tag) => Some(
+                conn.query_row(
+                    // We use `DO UPDATE SET` for upsert here because `DO
+                    // NOTHING` makes the query fail to return the ID in the
+                    // RETURNING clause.
+                    "INSERT INTO tags (name) VALUES (?1) ON CONFLICT DO UPDATE SET name = ?1 RETURNING id",
+                    [tag],
+                    |row| row.get(0),
+                )
+                .context("could not insert the new tag")?,
+            ),
+            None => None,
+        };
+
         let item = conn
             .query_row(
-                "INSERT INTO items (text, cadence, next) VALUES (?, ?, ?) RETURNING id, text, cadence, next, proportional_factor, integral, integral_factor, last_error, derivative_factor",
+                "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?) RETURNING id, text, cadence, next, proportional_factor, integral, integral_factor, last_error, derivative_factor",
                 params![
                     self.text.join(" "),
                     self.get_cadence(now),
-                    self.get_next(now)
+                    self.get_next(now),
+                    tag_id,
                 ],
                 |row| Ok(Item{
                     id: row.get(0)?,
@@ -88,7 +104,7 @@ mod test {
     fn default() -> AddCommand {
         AddCommand {
             text: vec!["Text".into()],
-            tags: Vec::default(),
+            tag: None,
             cadence: None,
             next: None,
         }
@@ -173,6 +189,56 @@ mod test {
                 .get::<_, String>(0))
                 .expect("failed to query the database")
         )
+    }
+
+    #[test]
+    fn adds_specified_tag() {
+        let mut command = default();
+
+        let tag: String = "tag".into();
+        command.tag = Some(tag.clone());
+
+        let conn = conn();
+
+        command
+            .run(&conn, Format::Human)
+            .expect("command should not fail");
+
+        let (tag_id, db_tag): (u64, String) = conn
+            .query_row("SELECT id, name FROM tags LIMIT 1", [], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
+            .expect("failed to find a new tag");
+
+        assert_eq!(tag, db_tag);
+
+        conn.query_row("SELECT * FROM items WHERE tag_id = ?", [tag_id], |_| Ok(()))
+            .expect("expected at least one row with the new tag")
+    }
+
+    #[test]
+    fn uses_existing_tag() {
+        let mut command = default();
+
+        let tag: String = "tag".into();
+        command.tag = Some(tag.clone());
+
+        let conn = conn();
+
+        let tag_id: u64 = conn
+            .query_row(
+                "INSERT INTO tags (name) VALUES (?) RETURNING id",
+                [tag],
+                |row| row.get(0),
+            )
+            .expect("failed to insert a new tag");
+
+        command
+            .run(&conn, Format::Human)
+            .expect("command should not fail");
+
+        conn.query_row("SELECT * FROM items WHERE tag_id = ?", [tag_id], |_| Ok(()))
+            .expect("expected at least one row with the new tag")
     }
 
     #[test]
