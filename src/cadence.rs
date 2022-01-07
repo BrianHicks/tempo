@@ -81,13 +81,13 @@ impl FromStr for Cadence {
             if tag != None {
                 return Err(Self::Err::ExtraStuff);
             }
-            // meaning: we're done with the digits but haven't assigned a tag yet.
-            else if !c.is_numeric() {
-                tag = Some(c);
-            }
             // meaning: we haven't completed scanning the digits yet.
-            else {
+            else if c.is_numeric() {
                 digits_offset += 1;
+            }
+            // meaning: we're done with the digits but haven't assigned a tag yet.
+            else {
+                tag = Some(c);
             }
         }
 
