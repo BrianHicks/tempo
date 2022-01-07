@@ -7,7 +7,7 @@ use clap::Parser;
 use rusqlite::{params, Connection};
 
 #[derive(Debug, Parser)]
-pub struct EditCommand {
+pub struct Command {
     /// ID of the item to edit
     id: usize,
 
@@ -45,7 +45,7 @@ pub struct EditCommand {
     much_later: bool,
 }
 
-impl EditCommand {
+impl Command {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
         if !self.text.is_empty() {
             self.update_text(conn)?;
@@ -163,7 +163,7 @@ mod test {
     #[test]
     fn fails_for_invalid_id() {
         let conn = setup();
-        let command = EditCommand::try_parse_from(&["edit", "0", "new text"]).unwrap();
+        let command = Command::try_parse_from(&["edit", "0", "new text"]).unwrap();
 
         assert!(command.run(&conn, Format::Human).is_err());
     }
@@ -171,7 +171,7 @@ mod test {
     #[test]
     fn updates_text() {
         let conn = setup();
-        let command = EditCommand::try_parse_from(&["edit", "1", "new", "text"]).unwrap();
+        let command = Command::try_parse_from(&["edit", "1", "new", "text"]).unwrap();
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(
@@ -185,7 +185,7 @@ mod test {
     #[test]
     fn updates_tag() {
         let conn = setup();
-        let command = EditCommand::try_parse_from(&["edit", "1", "--tag", "newtag"]).unwrap();
+        let command = Command::try_parse_from(&["edit", "1", "--tag", "newtag"]).unwrap();
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(
@@ -206,7 +206,7 @@ mod test {
     #[test]
     fn updates_next() {
         let conn = setup();
-        let command = EditCommand::try_parse_from(&["edit", "1", "--next", "2022-03-01"]).unwrap();
+        let command = Command::try_parse_from(&["edit", "1", "--next", "2022-03-01"]).unwrap();
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(
@@ -220,7 +220,7 @@ mod test {
     #[test]
     fn updates_cadence() {
         let conn = setup();
-        let command = EditCommand::try_parse_from(&["edit", "1", "--cadence", "1w"]).unwrap();
+        let command = Command::try_parse_from(&["edit", "1", "--cadence", "1w"]).unwrap();
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(

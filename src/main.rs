@@ -42,7 +42,7 @@ enum Command {
     Add(cli::add::AddCommand),
 
     /// Edit an existing item
-    Edit(cli::edit::EditCommand),
+    Edit(cli::edit::Command),
 }
 
 impl Opts {
