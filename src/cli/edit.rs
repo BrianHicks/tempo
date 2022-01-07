@@ -71,6 +71,13 @@ impl EditCommand {
             }
         }
 
+        if let Some(new_cadence) = &self.cadence {
+            self.update_cadence(new_cadence, conn)?;
+            if format == Format::Human {
+                println!("Updated cadence to {}", new_cadence)
+            }
+        }
+
         Ok(())
     }
 
@@ -103,6 +110,16 @@ impl EditCommand {
                 params![new_next, self.id],
             ),
             "couldn't update next",
+        )
+    }
+
+    fn update_cadence(&self, new_cadence: &Cadence, conn: &Connection) -> Result<()> {
+        self.handle_update(
+            conn.execute(
+                "UPDATE items SET cadence = ? WHERE id = ?",
+                params![new_cadence, self.id],
+            ),
+            "couldn't update cadence",
         )
     }
 
@@ -196,6 +213,22 @@ mod test {
             conn.query_row("SELECT next FROM items WHERE id = 1", [], |row| row
                 .get::<_, DateTime<Utc>>(0))
                 .unwrap()
+        )
+    }
+
+    #[test]
+    fn updates_cadence() {
+        let conn = setup();
+        let command = EditCommand::try_parse_from(&["edit", "1", "--cadence", "1w"]).unwrap();
+        command.run(&conn, Format::Human).unwrap();
+
+        assert_eq!(
+            Cadence::weeks(1),
+            conn.query_row("SELECT cadence FROM items WHERE id = 1", [], |row| row
+                .get::<_, Cadence>(
+                0
+            ))
+            .unwrap()
         )
     }
 }
