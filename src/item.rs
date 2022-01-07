@@ -50,7 +50,7 @@ impl Item {
 
     // as in Cadence, doing a conversion back and forth here is fine because
     // we're not going to be anywhere near the danger zone (52 bits)
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
     pub fn bump_cadence(&mut self, bump: &Bump) -> Cadence {
         let adjustment = Cadence::minutes(match bump {
             Bump::Earlier => self.pid.next(Cadence::days(-1).minutes as f64),

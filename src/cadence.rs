@@ -190,7 +190,7 @@ impl Add<Cadence> for Cadence {
 
 impl AddAssign<Cadence> for Cadence {
     fn add_assign(&mut self, other: Self) {
-        self.minutes += other.minutes
+        self.minutes += other.minutes;
     }
 }
 
