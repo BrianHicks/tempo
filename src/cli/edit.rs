@@ -44,9 +44,11 @@ pub struct EditCommand {
 
 impl EditCommand {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
-        self.update_text(conn)?;
-        if format == Format::Human {
-            println!("Updated text to {}", self.text.join(" "))
+        if !self.text.is_empty() {
+            self.update_text(conn)?;
+            if format == Format::Human {
+                println!("Updated text to {}", self.text.join(" "))
+            }
         }
 
         Ok(())
