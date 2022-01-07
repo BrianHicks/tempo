@@ -50,14 +50,14 @@ impl EditCommand {
         if !self.text.is_empty() {
             self.update_text(conn)?;
             if format == Format::Human {
-                println!("Updated text to {}", self.text.join(" "))
+                println!("Updated text to {}", self.text.join(" "));
             }
         }
 
         if let Some(new_tag) = &self.tag {
             self.update_tag(new_tag, conn)?;
             if format == Format::Human {
-                println!("Updated tag to {}", new_tag)
+                println!("Updated tag to {}", new_tag);
             }
         }
 
@@ -67,14 +67,14 @@ impl EditCommand {
                 println!(
                     "Updated next to {}",
                     new_next.with_timezone(&Local).to_rfc2822()
-                )
+                );
             }
         }
 
         if let Some(new_cadence) = &self.cadence {
             self.update_cadence(*new_cadence, conn)?;
             if format == Format::Human {
-                println!("Updated cadence to {}", new_cadence)
+                println!("Updated cadence to {}", new_cadence);
             }
         }
 
