@@ -42,12 +42,11 @@ impl Command {
                 // This *could* be a RETURNING for sure but making more queries
                 // in SQLite is super fast and it lets us use the shared "get
                 // an item" infrastructure here, which is better overall.
-                "INSERT INTO items (text, cadence, next, added, tag_id) VALUES (?, ?, ?, ?, ?) RETURNING id",
+                "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?) RETURNING id",
                 params![
                     self.text.join(" "),
                     self.get_cadence(now),
                     self.get_next(now),
-                    Utc::now(),
                     tag_id,
                 ],
                 |row| row.get(0),
