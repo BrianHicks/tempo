@@ -1,7 +1,6 @@
 use crate::cadence::Cadence;
 use crate::format::Format;
 use crate::item::Item;
-use crate::pid::Pid;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
@@ -38,30 +37,23 @@ impl AddCommand {
             None => None,
         };
 
-        let item = conn
+        let id: u64 = conn
             .query_row(
-                "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?) RETURNING id, text, cadence, next, proportional_factor, integral, integral_factor, last_error, derivative_factor",
+                // This *could* be a RETURNING for sure but making more queries
+                // in SQLite is super fast and it lets us use the shared "get
+                // an item" infrastructure here, which is better overall.
+                "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?) RETURNING id",
                 params![
                     self.text.join(" "),
                     self.get_cadence(now),
                     self.get_next(now),
                     tag_id,
                 ],
-                |row| Ok(Item{
-                    id: row.get(0)?,
-                    text: row.get(1)?,
-                    cadence: row.get(2)?,
-                    next: row.get(3)?,
-                    pid: Pid {
-                        proportional_factor: row.get(4)?,
-                        integral: row.get(5)?,
-                        integral_factor: row.get(6)?,
-                        last_error: row.get(7)?,
-                        derivative_factor: row.get(8)?,
-                    }
-                }),
+                |row| row.get(0),
             )
             .context("could not insert the new row into the database")?;
+
+        let item = Item::get(id, conn)?;
 
         match format {
             Format::Human => println!("Added \"{}\" with ID {}", item.text, item.id),
