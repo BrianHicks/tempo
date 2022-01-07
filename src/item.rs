@@ -18,6 +18,14 @@ pub struct Item {
     pub pid: Pid,
 }
 
+#[derive(clap::ArgEnum, Clone, Debug)]
+pub enum Bump {
+    Earlier,
+    MuchEarlier,
+    Later,
+    MuchLater,
+}
+
 impl Item {
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(

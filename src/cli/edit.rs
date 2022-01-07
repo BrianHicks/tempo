@@ -1,5 +1,6 @@
 use crate::cadence::Cadence;
 use crate::format::Format;
+use crate::item::Bump;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
@@ -31,14 +32,6 @@ pub struct Command {
     /// Tweak this item's schedule a little earlier or later
     #[clap(long, short, arg_enum, conflicts_with_all(&["cadence", "next"]))]
     bump: Option<Bump>,
-}
-
-#[derive(clap::ArgEnum, Clone, Debug)]
-enum Bump {
-    Earlier,
-    MuchEarlier,
-    Later,
-    MuchLater,
 }
 
 impl Command {
