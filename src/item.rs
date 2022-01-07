@@ -2,12 +2,13 @@ use crate::cadence::Cadence;
 use crate::pid::Pid;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
-use rusqlite::Connection;
+use rusqlite::{params, Connection};
 
 #[derive(Debug, serde::Serialize)]
 pub struct Item {
     pub id: u64,
     pub text: String,
+    pub tag_id: Option<u64>,
 
     // scheduling
     pub cadence: Cadence,
@@ -29,23 +30,28 @@ pub enum Bump {
 impl Item {
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(
-                "SELECT id, text, cadence, next, last, proportional_factor, integral, integral_factor, last_error, derivative_factor FROM items WHERE id = ?",
-                [id],
-                |row| Ok(Item{
+            "SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, last_error, derivative_factor FROM items WHERE id = ?",
+            [id],
+            |row| {
+                Ok(Item {
                     id: row.get(0)?,
                     text: row.get(1)?,
-                    cadence: row.get(2)?,
-                    next: row.get(3)?,
-                    last: row.get(4)?,
+                    tag_id: row.get(2)?,
+                    cadence: row.get(3)?,
+                    next: row.get(4)?,
+                    last: row.get(5)?,
                     pid: Pid {
-                        proportional_factor: row.get(5)?,
-                        integral: row.get(6)?,
-                        integral_factor: row.get(7)?,
-                        last_error: row.get(8)?,
-                        derivative_factor: row.get(9)?,
-                    }
-                }),
-            ).with_context(|| format!("could not retrieve item with ID {}", id))
+                        proportional_factor: row.get(6)?,
+                        integral: row.get(7)?,
+                        integral_factor: row.get(8)?,
+                        last_error: row.get(9)?,
+                        derivative_factor: row.get(10)?,
+                    },
+                })
+            },
+        )
+        .with_context(|| format!("could not retrieve item with ID {}", id))
+    }
 
     pub fn save(self, conn: &Connection) -> Result<()> {
         conn.execute(
@@ -95,6 +101,7 @@ mod tests {
         Item {
             id: 1,
             text: "Test".into(),
+            tag_id: None,
             cadence: Cadence::days(1),
             next: Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
             last: None,
