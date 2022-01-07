@@ -54,7 +54,13 @@ impl Pid {
     }
 
     fn next_output(&self, p: f64, i: f64, d: f64) -> f64 {
-        p * self.proportional_factor + i * self.integral_factor - d * self.derivative_factor
+        let p_f = p * self.proportional_factor;
+        let i_f = i * self.integral_factor;
+        let d_f = d * self.derivative_factor;
+        let out = p_f + i_f - d_f;
+
+        log::debug!("p: {}, i: {}, d: {}, out: {}", p_f, i_f, d_f, out);
+        out
     }
 }
 
