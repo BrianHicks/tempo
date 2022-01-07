@@ -46,6 +46,26 @@ impl Item {
                     }
                 }),
             ).with_context(|| format!("could not retrieve item with ID {}", id))
+
+    pub fn save(self, conn: &Connection) -> Result<()> {
+        conn.execute(
+            "UPDATE item SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, proportional_factor = ?, integral = ?, integral_factor = ?, last_error = ?, derivative_factor = ? WHERE id = ?",
+            params![
+                self.text,
+                self.cadence,
+                self.next,
+                self.last,
+                self.tag_id,
+                self.pid.proportional_factor,
+                self.pid.integral,
+                self.pid.integral_factor,
+                self.pid.last_error,
+                self.pid.derivative_factor,
+                self.id,
+            ]
+        ).with_context(|| format!("could not item with ID {}", self.id))?;
+
+        Ok(())
     }
 
     // as in Cadence, doing a conversion back and forth here is fine because
