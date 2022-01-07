@@ -59,7 +59,7 @@ You can also say that it was too early or too late to complete the task (again, 
 
 ```bash
 $ tempo edit 1 --bump later
-Rescheduled 1, added an additional 3 days (now scheduled 20XX-12-30)
+Bumped schedule by ~5d to Wed, 12 Jan 20xx 11:38:34 -0600
 ```
 
 Or drop it entirely:

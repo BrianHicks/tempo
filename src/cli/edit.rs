@@ -70,7 +70,11 @@ impl Command {
         if let Some(bump) = &self.bump {
             let item = self.update_bump(bump, conn)?;
             if format == Format::Human {
-                println!("Bumped schedule by {} to {}", item.cadence, item.next);
+                println!(
+                    "Bumped schedule by {} to {}",
+                    item.cadence,
+                    item.next.with_timezone(&Local).to_rfc2822()
+                );
             }
         }
 
