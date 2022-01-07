@@ -6,7 +6,7 @@ pub fn migration() -> String {
 
     m.create_table("tags", |t| {
         t.add_column("id", types::primary());
-        t.add_column("name", types::text());
+        t.add_column("name", types::text().unique(true));
     });
 
     m.make::<Sqlite>()
