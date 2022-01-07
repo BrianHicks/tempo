@@ -1,6 +1,6 @@
 use crate::cadence::Cadence;
 use crate::format::Format;
-use crate::item::Bump;
+use crate::item::{Bump, Item};
 use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
@@ -10,7 +10,7 @@ use rusqlite::{params, Connection};
 #[derive(Debug, Parser)]
 pub struct Command {
     /// ID of the item to edit
-    id: usize,
+    id: u64,
 
     /// New text to for the item. New text is required if there are no
     /// other edits in the flags.
@@ -67,6 +67,13 @@ impl Command {
             }
         }
 
+        if let Some(bump) = &self.bump {
+            let item = self.update_bump(bump, conn)?;
+            if format == Format::Human {
+                println!("Bumped schedule by {} to {}", item.cadence, item.next)
+            }
+        }
+
         Ok(())
     }
 
@@ -110,6 +117,17 @@ impl Command {
             ),
             "couldn't update cadence",
         )
+    }
+
+    fn update_bump(&self, bump: &Bump, conn: &Connection) -> Result<Item> {
+        let mut item = Item::get(self.id, conn).context("couldn't load item to bump")?;
+        let adjustment = item.bump_cadence(bump);
+        item.next = item.next + adjustment;
+
+        item.save(conn)
+            .context("could not save item after bumping")?;
+
+        Ok(item)
     }
 
     fn handle_update(&self, count: rusqlite::Result<usize>, context: &'static str) -> Result<()> {
@@ -221,5 +239,25 @@ mod test {
             ))
             .unwrap()
         )
+    }
+
+    #[test]
+    fn bumps_schedule() {
+        let conn = setup();
+        let before = Item::get(1, &conn).unwrap();
+
+        let command = Command::try_parse_from(&["edit", "1", "--bump", "later"]).unwrap();
+        command.run(&conn, Format::Human).unwrap();
+
+        let after = Item::get(1, &conn).unwrap();
+
+        println!(
+            "before.cadence: {}, after.cadence: {}",
+            before.cadence, after.cadence
+        );
+        assert!(before.cadence < after.cadence);
+
+        println!("before.next: {}, after.next: {}", before.next, after.next);
+        assert!(before.next < after.next);
     }
 }

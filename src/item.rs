@@ -55,9 +55,9 @@ impl Item {
         .with_context(|| format!("could not retrieve item with ID {}", id))
     }
 
-    pub fn save(self, conn: &Connection) -> Result<()> {
+    pub fn save(&self, conn: &Connection) -> Result<()> {
         conn.execute(
-            "UPDATE item SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, proportional_factor = ?, integral = ?, integral_factor = ?, last_error = ?, derivative_factor = ? WHERE id = ?",
+            "UPDATE items SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, proportional_factor = ?, integral = ?, integral_factor = ?, last_error = ?, derivative_factor = ? WHERE id = ?",
             params![
                 self.text,
                 self.cadence,
