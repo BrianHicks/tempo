@@ -47,4 +47,93 @@ impl Item {
                 }),
             ).with_context(|| format!("could not retrieve item with ID {}", id))
     }
+
+    pub fn bump_cadence(&mut self, bump: &Bump) -> Cadence {
+        let adjustment = Cadence::minutes(match bump {
+            Bump::Earlier => self.pid.next(Cadence::days(-1).minutes as f64),
+            Bump::MuchEarlier => self.pid.next(Cadence::days(-4).minutes as f64),
+            Bump::Later => self.pid.next(Cadence::days(1).minutes as f64),
+            Bump::MuchLater => self.pid.next(Cadence::days(4).minutes as f64),
+        } as i64);
+
+        log::debug!("adjusting cadence by {:?}", adjustment);
+        self.cadence += adjustment;
+
+        adjustment
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    fn default() -> Item {
+        Item {
+            id: 1,
+            text: "Test".into(),
+            cadence: Cadence::days(1),
+            next: Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
+            last: None,
+            pid: Pid::default(),
+        }
+    }
+
+    mod bump_cadence {
+        use super::*;
+
+        #[test]
+        fn earlier() {
+            let mut item = default();
+
+            let orig = Cadence::months(1);
+            item.cadence = orig;
+
+            item.bump_cadence(&Bump::Earlier);
+
+            assert!(item.cadence < orig);
+        }
+
+        #[test]
+        fn much_earlier() {
+            let mut small = default();
+            let mut large = default();
+
+            let orig = Cadence::months(1);
+            small.cadence = orig;
+            large.cadence = orig;
+
+            small.bump_cadence(&Bump::Earlier);
+            large.bump_cadence(&Bump::MuchEarlier);
+
+            assert!(large.cadence < small.cadence);
+        }
+
+        #[test]
+        fn later() {
+            let mut item = default();
+
+            let orig = Cadence::months(1);
+            item.cadence = orig;
+
+            item.bump_cadence(&Bump::Later);
+
+            assert!(item.cadence > orig);
+        }
+
+        #[test]
+        fn much_later() {
+            let mut small = default();
+            let mut large = default();
+
+            let orig = Cadence::months(1);
+            small.cadence = orig;
+            large.cadence = orig;
+
+            small.bump_cadence(&Bump::Later);
+            large.bump_cadence(&Bump::MuchLater);
+
+            assert!(large.cadence > small.cadence);
+        }
+    }
 }
