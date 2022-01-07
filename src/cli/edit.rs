@@ -2,7 +2,7 @@ use crate::cadence::Cadence;
 use crate::format::Format;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Local, TimeZone, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
 
@@ -61,6 +61,16 @@ impl EditCommand {
             }
         }
 
+        if let Some(new_next) = &self.next {
+            self.update_next(new_next, conn)?;
+            if format == Format::Human {
+                println!(
+                    "Updated next to {}",
+                    new_next.with_timezone(&Local).to_rfc2822()
+                )
+            }
+        }
+
         Ok(())
     }
 
@@ -83,6 +93,16 @@ impl EditCommand {
                 params![tag.id, self.id],
             ),
             "couldn't update the tag",
+        )
+    }
+
+    fn update_next(&self, new_next: &DateTime<Utc>, conn: &Connection) -> Result<()> {
+        self.handle_update(
+            conn.execute(
+                "UPDATE items SET next = ? WHERE id = ?",
+                params![new_next, self.id],
+            ),
+            "couldn't update next",
         )
     }
 
@@ -163,5 +183,19 @@ mod test {
                 .get::<_, u64>(0))
                 .unwrap()
         );
+    }
+
+    #[test]
+    fn updates_next() {
+        let conn = setup();
+        let command = EditCommand::try_parse_from(&["edit", "1", "--next", "2022-03-01"]).unwrap();
+        command.run(&conn, Format::Human).unwrap();
+
+        assert_eq!(
+            Utc.ymd(2022, 03, 01).and_hms(0, 0, 0),
+            conn.query_row("SELECT next FROM items WHERE id = 1", [], |row| row
+                .get::<_, DateTime<Utc>>(0))
+                .unwrap()
+        )
     }
 }
