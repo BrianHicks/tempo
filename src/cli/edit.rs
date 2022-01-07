@@ -43,19 +43,26 @@ pub struct EditCommand {
 }
 
 impl EditCommand {
-    pub fn run(&self, conn: &Connection, _format: Format) -> Result<()> {
-        self.validate_id_exists(&conn)?;
+    pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
+        self.update_text(conn)?;
+        if format == Format::Human {
+            println!("Updated text to {}", self.text.join(" "))
+        }
 
         Ok(())
     }
 
-    fn validate_id_exists(&self, conn: &Connection) -> Result<()> {
-        match conn.query_row("SELECT id FROM items WHERE id = ?", [self.id], |_| Ok(())) {
-            Err(rusqlite::Error::QueryReturnedNoRows) => {
-                anyhow::bail!("there is no item with ID {}", self.id)
-            }
-            Err(otherwise) => Err(otherwise).context("there was a problem looking up that item"),
-            Ok(_) => Ok(()),
+    fn update_text(&self, conn: &Connection) -> Result<()> {
+        match conn.execute(
+            "UPDATE items SET text = ? WHERE id = ?",
+            params![self.text.join(" "), self.id],
+        ) {
+            Ok(0) => anyhow::bail!("could not update text for ID {} (does it exist?)", self.id),
+            Ok(1) => Ok(()),
+            Ok(_) => anyhow::bail!(
+                "there were somehow multiple rows with the same ID. Please report this as a bug!"
+            ),
+            Err(problem) => Err(problem).context("there was a problem updating item text"),
         }
     }
 }
@@ -90,5 +97,19 @@ mod test {
         let command = EditCommand::try_parse_from(&["edit", "0"]).unwrap();
 
         assert!(command.run(&conn, Format::Human).is_err());
+    }
+
+    #[test]
+    fn updates_text() {
+        let conn = setup();
+        let command = EditCommand::try_parse_from(&["edit", "1", "new", "text"]).unwrap();
+        command.run(&conn, Format::Human).unwrap();
+
+        assert_eq!(
+            "new text".to_string(),
+            conn.query_row("SELECT text FROM items WHERE id = 1", [], |row| row
+                .get::<_, String>(0))
+                .unwrap()
+        )
     }
 }
