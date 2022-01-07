@@ -1,5 +1,6 @@
 use crate::cadence::Cadence;
 use crate::format::Format;
+use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
 use clap::Parser;
@@ -53,6 +54,13 @@ impl EditCommand {
             }
         }
 
+        if let Some(new_tag) = &self.tag {
+            self.update_tag(new_tag, conn)?;
+            if format == Format::Human {
+                println!("Updated tag to {}", new_tag)
+            }
+        }
+
         Ok(())
     }
 
@@ -67,6 +75,29 @@ impl EditCommand {
                 "there were somehow multiple rows with the same ID. Please report this as a bug!"
             ),
             Err(problem) => Err(problem).context("there was a problem updating item text"),
+        }
+    }
+
+    fn update_tag(&self, new_tag: &str, conn: &Connection) -> Result<()> {
+        let tag = Tag::get_or_create(conn, new_tag).context("couldn't get the new tag")?;
+
+        self.handle_update(
+            conn.execute(
+                "UPDATE items SET tag_id = ? WHERE id = ?",
+                params![tag.id, self.id],
+            ),
+            "couldn't update the tag",
+        )
+    }
+
+    fn handle_update(&self, count: rusqlite::Result<usize>, context: &'static str) -> Result<()> {
+        match count {
+            Ok(0) => anyhow::bail!("could not update item with ID {} (does it exist?)", self.id),
+            Ok(1) => Ok(()),
+            Ok(_) => anyhow::bail!(
+                "there were somehow multiple rows with the same ID. Please report this as a bug!"
+            ),
+            Err(problem) => Err(problem).context(context),
         }
     }
 }
@@ -98,7 +129,7 @@ mod test {
     #[test]
     fn fails_for_invalid_id() {
         let conn = setup();
-        let command = EditCommand::try_parse_from(&["edit", "0"]).unwrap();
+        let command = EditCommand::try_parse_from(&["edit", "0", "new text"]).unwrap();
 
         assert!(command.run(&conn, Format::Human).is_err());
     }
@@ -115,5 +146,26 @@ mod test {
                 .get::<_, String>(0))
                 .unwrap()
         )
+    }
+
+    #[test]
+    fn updates_tag() {
+        let conn = setup();
+        let command = EditCommand::try_parse_from(&["edit", "1", "--tag", "newtag"]).unwrap();
+        command.run(&conn, Format::Human).unwrap();
+
+        assert_eq!(
+            "newtag".to_string(),
+            conn.query_row("SELECT name FROM tags WHERE id = 2", [], |row| row
+                .get::<_, String>(0))
+                .unwrap()
+        );
+
+        assert_eq!(
+            2,
+            conn.query_row("SELECT tag_id FROM items WHERE id = 1", [], |row| row
+                .get::<_, u64>(0))
+                .unwrap()
+        );
     }
 }
