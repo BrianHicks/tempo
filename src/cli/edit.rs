@@ -68,11 +68,11 @@ impl Command {
         }
 
         if let Some(bump) = &self.bump {
-            let item = self.update_bump(bump, conn)?;
+            let (adjustment, item) = self.update_bump(bump, conn)?;
             if format == Format::Human {
                 println!(
                     "Bumped schedule by {} to {}",
-                    item.cadence,
+                    adjustment,
                     item.next.with_timezone(&Local).to_rfc2822()
                 );
             }
@@ -131,7 +131,7 @@ impl Command {
         )
     }
 
-    fn update_bump(&self, bump: &Bump, conn: &Connection) -> Result<Item> {
+    fn update_bump(&self, bump: &Bump, conn: &Connection) -> Result<(Cadence, Item)> {
         let mut item = Item::get(self.id, conn).context("couldn't load item to bump")?;
         let adjustment = item.bump_cadence(bump);
         item.next = item.next + adjustment;
@@ -139,7 +139,7 @@ impl Command {
         item.save(conn)
             .context("could not save item after bumping")?;
 
-        Ok(item)
+        Ok((adjustment, item))
     }
 
     fn handle_update(&self, count: rusqlite::Result<usize>, context: &'static str) -> Result<()> {
