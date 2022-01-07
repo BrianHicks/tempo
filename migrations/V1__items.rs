@@ -18,6 +18,7 @@ pub fn migration() -> String {
         t.add_column("proportional_factor", types::float().default(1.5));
         t.add_column("integral", types::float().default(0.0));
         t.add_column("integral_factor", types::float().default(0.3));
+        t.add_column("integral_decay", types::float().default(0.5));
         t.add_column("last_error", types::float().default(0.0));
         t.add_column("derivative_factor", types::float().default(0.1));
     });

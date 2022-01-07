@@ -32,7 +32,7 @@ pub enum Bump {
 impl Item {
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(
-            "SELECT id, text, tag_id, cadence, next, last, added, proportional_factor, integral, integral_factor, last_error, derivative_factor FROM items WHERE id = ?",
+            "SELECT id, text, tag_id, cadence, next, last, added, proportional_factor, integral, integral_factor, integral_decay, last_error, derivative_factor FROM items WHERE id = ?",
             [id],
             |row| {
                 Ok(Item {
@@ -47,8 +47,9 @@ impl Item {
                         proportional_factor: row.get(7)?,
                         integral: row.get(8)?,
                         integral_factor: row.get(9)?,
-                        last_error: row.get(10)?,
-                        derivative_factor: row.get(11)?,
+                        integral_decay: row.get(10)?,
+                        last_error: row.get(11)?,
+                        derivative_factor: row.get(12)?,
                     },
                 })
             },
