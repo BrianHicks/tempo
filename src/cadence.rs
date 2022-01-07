@@ -1,5 +1,6 @@
 use chrono::{DateTime, Duration, TimeZone};
 use core::convert::From;
+use core::fmt::{self, Display, Formatter};
 use core::ops::Add;
 use core::str::FromStr;
 use rusqlite::{
@@ -7,6 +8,12 @@ use rusqlite::{
     ToSql,
 };
 use thiserror::Error;
+
+static HOURS: i64 = 60;
+static DAYS: i64 = HOURS * 24;
+static WEEKS: i64 = DAYS * 7;
+static MONTHS: i64 = DAYS * 30;
+static YEARS: i64 = DAYS * 365;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Serialize)]
 pub struct Cadence {
@@ -19,23 +26,23 @@ impl Cadence {
     }
 
     pub fn hours(hours: i64) -> Cadence {
-        Self::minutes(hours * 60)
+        Self::minutes(hours * HOURS)
     }
 
     pub fn days(days: i64) -> Cadence {
-        Self::hours(days * 24)
+        Self::minutes(days * DAYS)
     }
 
     pub fn weeks(weeks: i64) -> Cadence {
-        Self::days(weeks * 7)
+        Self::minutes(weeks * WEEKS)
     }
 
     pub fn months(months: i64) -> Cadence {
-        Self::days(months * 30)
+        Self::minutes(months * MONTHS)
     }
 
     pub fn years(years: i64) -> Cadence {
-        Self::days(years * 365)
+        Self::minutes(years * YEARS)
     }
 }
 
@@ -104,6 +111,36 @@ impl FromStr for Cadence {
         };
 
         Ok(out)
+    }
+}
+
+impl Display for Cadence {
+    fn fmt(&self, out: &mut Formatter<'_>) -> fmt::Result {
+        if self.minutes >= YEARS * 2 {
+            write!(out, "~{}y", (self.minutes as f64 / YEARS as f64).round())
+        } else if self.minutes >= MONTHS * 3 {
+            write!(out, "~{}m", (self.minutes as f64 / MONTHS as f64).round())
+        } else if self.minutes >= WEEKS {
+            if self.minutes % WEEKS == 0 {
+                write!(out, "{}w", self.minutes / WEEKS)
+            } else {
+                write!(out, "~{}w", (self.minutes as f64 / WEEKS as f64).round())
+            }
+        } else if self.minutes >= DAYS {
+            if self.minutes % DAYS == 0 {
+                write!(out, "{}d", self.minutes / DAYS)
+            } else {
+                write!(out, "~{}d", (self.minutes as f64 / DAYS as f64).round())
+            }
+        } else if self.minutes >= HOURS {
+            if self.minutes % HOURS == 0 {
+                write!(out, "{}h", self.minutes / HOURS)
+            } else {
+                write!(out, "~{}h", (self.minutes as f64 / HOURS as f64).round())
+            }
+        } else {
+            write!(out, "<1h")
+        }
     }
 }
 
@@ -196,6 +233,74 @@ mod tests {
         #[test]
         fn parse_duration_leading() {
             assert!(Cadence::from_str("d").is_err());
+        }
+    }
+
+    mod display {
+        use super::*;
+
+        #[test]
+        fn minutes() {
+            assert_eq!("<1h", Cadence::minutes(1).to_string())
+        }
+
+        #[test]
+        fn exact_hours() {
+            assert_eq!("1h", Cadence::hours(1).to_string())
+        }
+
+        #[test]
+        fn partial_hours() {
+            assert_eq!("~2h", Cadence::minutes(90).to_string())
+        }
+
+        #[test]
+        fn exact_days() {
+            assert_eq!("1d", Cadence::days(1).to_string())
+        }
+
+        #[test]
+        fn partial_days() {
+            assert_eq!("~2d", Cadence::hours(36).to_string())
+        }
+
+        #[test]
+        fn weeks() {
+            assert_eq!("1w", Cadence::weeks(1).to_string())
+        }
+
+        #[test]
+        fn partial_weeks() {
+            assert_eq!("~2w", Cadence::days(11).to_string())
+        }
+
+        #[test]
+        fn months() {
+            // Note transition here from ~1m. That's just a little too
+            // rough-grained. It may change in the future.
+            assert_eq!("~4w", Cadence::months(1).to_string())
+        }
+
+        #[test]
+        fn partial_months() {
+            // Note transition here from ~2m. That's just a little too
+            // rough-grained. It may change in the future.
+            assert_eq!("~6w", Cadence::days(45).to_string())
+        }
+
+        #[test]
+        fn quarters() {
+            assert_eq!("~3m", Cadence::months(3).to_string())
+        }
+
+        #[test]
+        fn years() {
+            assert_eq!("~12m", Cadence::years(1).to_string())
+        }
+
+        #[test]
+        fn multiple_years() {
+            assert_eq!("~2y", Cadence::years(2).to_string())
         }
     }
 }
