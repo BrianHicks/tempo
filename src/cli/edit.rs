@@ -72,7 +72,7 @@ impl EditCommand {
         }
 
         if let Some(new_cadence) = &self.cadence {
-            self.update_cadence(new_cadence, conn)?;
+            self.update_cadence(*new_cadence, conn)?;
             if format == Format::Human {
                 println!("Updated cadence to {}", new_cadence)
             }
@@ -113,7 +113,7 @@ impl EditCommand {
         )
     }
 
-    fn update_cadence(&self, new_cadence: &Cadence, conn: &Connection) -> Result<()> {
+    fn update_cadence(&self, new_cadence: Cadence, conn: &Connection) -> Result<()> {
         self.handle_update(
             conn.execute(
                 "UPDATE items SET cadence = ? WHERE id = ?",
