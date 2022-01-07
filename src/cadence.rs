@@ -17,7 +17,7 @@ static YEARS: i64 = DAYS * 365;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Serialize, PartialOrd)]
 pub struct Cadence {
-    minutes: i64,
+    pub minutes: i64,
 }
 
 impl Cadence {
