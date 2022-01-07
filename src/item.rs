@@ -22,8 +22,9 @@ pub struct Item {
 
 #[derive(clap::ArgEnum, Clone, Debug)]
 pub enum Bump {
-    Earlier,
     MuchEarlier,
+    Earlier,
+    JustRight,
     Later,
     MuchLater,
 }
@@ -82,8 +83,9 @@ impl Item {
     #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
     pub fn bump_cadence(&mut self, bump: &Bump) -> Cadence {
         let adjustment = Cadence::minutes(match bump {
-            Bump::Earlier => self.pid.next(Cadence::days(-1).minutes as f64),
             Bump::MuchEarlier => self.pid.next(Cadence::days(-4).minutes as f64),
+            Bump::Earlier => self.pid.next(Cadence::days(-1).minutes as f64),
+            Bump::JustRight => self.pid.next(0.0),
             Bump::Later => self.pid.next(Cadence::days(1).minutes as f64),
             Bump::MuchLater => self.pid.next(Cadence::days(4).minutes as f64),
         } as i64);
@@ -117,18 +119,6 @@ mod tests {
         use super::*;
 
         #[test]
-        fn earlier() {
-            let mut item = default();
-
-            let orig = Cadence::months(1);
-            item.cadence = orig;
-
-            item.bump_cadence(&Bump::Earlier);
-
-            assert!(item.cadence < orig);
-        }
-
-        #[test]
         fn much_earlier() {
             let mut small = default();
             let mut large = default();
@@ -141,6 +131,18 @@ mod tests {
             large.bump_cadence(&Bump::MuchEarlier);
 
             assert!(large.cadence < small.cadence);
+        }
+
+        #[test]
+        fn earlier() {
+            let mut item = default();
+
+            let orig = Cadence::months(1);
+            item.cadence = orig;
+
+            item.bump_cadence(&Bump::Earlier);
+
+            assert!(item.cadence < orig);
         }
 
         #[test]

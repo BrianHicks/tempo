@@ -74,6 +74,14 @@ impl Command {
             }
         }
 
+        if format == Format::Json {
+            let item = Item::get(self.id, conn).context("couldn't get item for JSON formatting")?;
+            println!(
+                "{}",
+                serde_json::to_string(&item).context("couldn't convert item to JSON")?
+            );
+        }
+
         Ok(())
     }
 
