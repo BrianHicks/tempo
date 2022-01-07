@@ -15,7 +15,7 @@ static WEEKS: i64 = DAYS * 7;
 static MONTHS: i64 = DAYS * 30;
 static YEARS: i64 = DAYS * 365;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Serialize, PartialOrd)]
 pub struct Cadence {
     minutes: i64,
 }
