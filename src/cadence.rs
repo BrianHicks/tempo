@@ -115,6 +115,11 @@ impl FromStr for Cadence {
 }
 
 impl Display for Cadence {
+    // losing precision is fine for this use case, since we're unlikely
+    // to have a number of minutes greater than 52 bits. Wolfram Alpha
+    // says 2^52 minutes is something like 90% of the expected life of the
+    // sun. https://www.wolframalpha.com/input/?i=2%5E52+minutes
+    #[allow(clippy::cast_precision_loss)]
     fn fmt(&self, out: &mut Formatter<'_>) -> fmt::Result {
         if self.minutes >= YEARS * 2 {
             write!(out, "~{}y", (self.minutes as f64 / YEARS as f64).round())
