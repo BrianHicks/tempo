@@ -8,6 +8,5 @@ pub fn migration() -> String {
         t.inject_custom("ADD COLUMN \"tag_id\" INTEGER REFERENCES tags (id)");
     });
 
-    log::debug!("{}", m.make::<Sqlite>());
     m.make::<Sqlite>()
 }
