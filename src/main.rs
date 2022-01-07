@@ -36,6 +36,9 @@ enum Command {
     /// Add a new item to the store
     Add(cli::add::AddCommand),
 
+    /// Edit an existing item
+    Edit(cli::edit::EditCommand),
+
     /// Finish a scheduled item
     Finish(cli::finish::FinishCommand),
 }
@@ -49,6 +52,7 @@ impl Opts {
 
         match &self.command {
             Command::Add(add) => add.run(&conn, self.format),
+            Command::Edit(edit) => edit.run(&conn, self.format),
             Command::Finish(finish) => finish.run(&conn, self.format),
         }
     }
