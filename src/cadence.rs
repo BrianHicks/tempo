@@ -253,71 +253,71 @@ mod tests {
 
         #[test]
         fn negative() {
-            assert_eq!("<-1h", Cadence::minutes(-1).to_string())
+            assert_eq!("<-1h", Cadence::minutes(-1).to_string());
         }
 
         #[test]
         fn minutes() {
-            assert_eq!("<1h", Cadence::minutes(1).to_string())
+            assert_eq!("<1h", Cadence::minutes(1).to_string());
         }
 
         #[test]
         fn exact_hours() {
-            assert_eq!("1h", Cadence::hours(1).to_string())
+            assert_eq!("1h", Cadence::hours(1).to_string());
         }
 
         #[test]
         fn partial_hours() {
-            assert_eq!("~2h", Cadence::minutes(90).to_string())
+            assert_eq!("~2h", Cadence::minutes(90).to_string());
         }
 
         #[test]
         fn exact_days() {
-            assert_eq!("1d", Cadence::days(1).to_string())
+            assert_eq!("1d", Cadence::days(1).to_string());
         }
 
         #[test]
         fn partial_days() {
-            assert_eq!("~2d", Cadence::hours(36).to_string())
+            assert_eq!("~2d", Cadence::hours(36).to_string());
         }
 
         #[test]
         fn weeks() {
-            assert_eq!("1w", Cadence::weeks(1).to_string())
+            assert_eq!("1w", Cadence::weeks(1).to_string());
         }
 
         #[test]
         fn partial_weeks() {
-            assert_eq!("~2w", Cadence::days(11).to_string())
+            assert_eq!("~2w", Cadence::days(11).to_string());
         }
 
         #[test]
         fn months() {
             // Note transition here from ~1m. That's just a little too
             // rough-grained. It may change in the future.
-            assert_eq!("~4w", Cadence::months(1).to_string())
+            assert_eq!("~4w", Cadence::months(1).to_string());
         }
 
         #[test]
         fn partial_months() {
             // Note transition here from ~2m. That's just a little too
             // rough-grained. It may change in the future.
-            assert_eq!("~6w", Cadence::days(45).to_string())
+            assert_eq!("~6w", Cadence::days(45).to_string());
         }
 
         #[test]
         fn quarters() {
-            assert_eq!("~3m", Cadence::months(3).to_string())
+            assert_eq!("~3m", Cadence::months(3).to_string());
         }
 
         #[test]
         fn years() {
-            assert_eq!("~12m", Cadence::years(1).to_string())
+            assert_eq!("~12m", Cadence::years(1).to_string());
         }
 
         #[test]
         fn multiple_years() {
-            assert_eq!("~2y", Cadence::years(2).to_string())
+            assert_eq!("~2y", Cadence::years(2).to_string());
         }
     }
 }

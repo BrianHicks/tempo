@@ -109,7 +109,7 @@ mod test {
         let mut command = default();
         command.next = Some(next);
 
-        assert_eq!(next, command.get_next(Utc::now()))
+        assert_eq!(next, command.get_next(Utc::now()));
     }
 
     #[test]
@@ -131,7 +131,7 @@ mod test {
         let mut command = default();
         command.cadence = Some(cadence);
 
-        assert_eq!(cadence, command.get_cadence(Utc::now()))
+        assert_eq!(cadence, command.get_cadence(Utc::now()));
     }
 
     #[test]
@@ -152,7 +152,7 @@ mod test {
         command.cadence = None; // just to be explicit
         command.next = None; // just to be explicit
 
-        assert_eq!(Cadence::days(1), command.get_cadence(Utc::now()))
+        assert_eq!(Cadence::days(1), command.get_cadence(Utc::now()));
     }
 
     #[test]
@@ -171,7 +171,7 @@ mod test {
             conn.query_row("SELECT text FROM items LIMIT 1", [], |row| row
                 .get::<_, String>(0))
                 .expect("failed to query the database")
-        )
+        );
     }
 
     #[test]
@@ -196,7 +196,7 @@ mod test {
         assert_eq!(tag, db_tag);
 
         conn.query_row("SELECT * FROM items WHERE tag_id = ?", [tag_id], |_| Ok(()))
-            .expect("expected at least one row with the new tag")
+            .expect("expected at least one row with the new tag");
     }
 
     #[test]
@@ -216,14 +216,14 @@ mod test {
             cadence,
             conn.query_row("SELECT cadence FROM items LIMIT 1", [], |row| row.get(0))
                 .expect("failed to query the database")
-        )
+        );
     }
 
     #[test]
     fn adds_specified_next() {
         let mut command = default();
 
-        let next = Utc.ymd(2022, 03, 1).and_hms(9, 0, 0);
+        let next = Utc.ymd(2022, 3, 1).and_hms(9, 0, 0);
         command.next = Some(next);
 
         let conn = conn();
@@ -237,6 +237,6 @@ mod test {
             conn.query_row("SELECT next FROM items LIMIT 1", [], |row| row
                 .get::<_, DateTime<Utc>>(0))
                 .expect("failed to query the database")
-        )
+        );
     }
 }

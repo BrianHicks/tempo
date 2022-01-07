@@ -80,6 +80,7 @@ impl Pid {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 
@@ -126,7 +127,7 @@ mod tests {
     fn test_derivative() {
         let mut d = Pid::new(0.0, 0.0, 0.0, 1.0);
 
-        assert_eq!(-1.0, d.next(1.0))
+        assert_eq!(-1.0, d.next(1.0));
     }
 
     #[test]
