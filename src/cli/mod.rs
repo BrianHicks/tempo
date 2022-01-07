@@ -21,7 +21,7 @@ mod test {
         #[test]
         fn date() {
             assert_eq!(
-                Utc.ymd(2022, 01, 01).and_hms(0, 0, 0),
+                Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
                 parse_utc_datetime("2022-01-01").unwrap()
             )
         }
@@ -29,7 +29,7 @@ mod test {
         #[test]
         fn datetime() {
             assert_eq!(
-                Utc.ymd(2022, 01, 01).and_hms(3, 2, 1),
+                Utc.ymd(2022, 1, 1).and_hms(3, 2, 1),
                 parse_utc_datetime("2022-01-01T03:02:01").unwrap()
             )
         }

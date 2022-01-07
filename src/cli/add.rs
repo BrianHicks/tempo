@@ -223,7 +223,7 @@ mod test {
     fn adds_specified_next() {
         let mut command = default();
 
-        let next = Utc.ymd(2022, 03, 01).and_hms(9, 0, 0);
+        let next = Utc.ymd(2022, 03, 1).and_hms(9, 0, 0);
         command.next = Some(next);
 
         let conn = conn();

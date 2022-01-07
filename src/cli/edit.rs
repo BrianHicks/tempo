@@ -199,7 +199,7 @@ mod test {
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(
-            Utc.ymd(2022, 03, 01).and_hms(0, 0, 0),
+            Utc.ymd(2022, 03, 1).and_hms(0, 0, 0),
             conn.query_row("SELECT next FROM items WHERE id = 1", [], |row| row
                 .get::<_, DateTime<Utc>>(0))
                 .unwrap()
