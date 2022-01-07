@@ -73,7 +73,7 @@ impl Opts {
 
     fn get_db_path(&self) -> Result<PathBuf> {
         if let Some(explicit) = &self.db_path {
-            return Ok(explicit.to_path_buf());
+            return Ok(explicit.clone());
         }
 
         let dirs = directories::ProjectDirs::from("zone", "bytes", "tempo")

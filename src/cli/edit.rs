@@ -2,7 +2,7 @@ use crate::cadence::Cadence;
 use crate::format::Format;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local, TimeZone, Utc};
+use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
 
@@ -138,6 +138,7 @@ impl EditCommand {
 #[cfg(test)]
 mod test {
     use super::*;
+    use chrono::TimeZone;
 
     fn setup() -> Connection {
         let mut conn = Connection::open_in_memory().unwrap();
