@@ -1,6 +1,5 @@
 pub mod add;
 pub mod edit;
-pub mod finish;
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
