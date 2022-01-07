@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use rusqlite::Connection;
 
+#[derive(Debug)]
 pub struct Tag {
     pub id: u64,
     pub name: String,
