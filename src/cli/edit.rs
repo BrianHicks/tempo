@@ -13,36 +13,32 @@ pub struct Command {
 
     /// New text to for the item. New text is required if there are no
     /// other edits in the flags.
-    #[clap(required_unless_present_any(&["tag", "next", "cadence", "earlier", "much-earlier", "later", "much-later"]))]
+    #[clap(required_unless_present_any(&["tag", "next", "cadence", "bump"]))]
     text: Vec<String>,
 
     /// Change this item's tag
-    #[clap(short, long)]
+    #[clap(long, short)]
     tag: Option<String>,
 
     /// Change when this item will be scheduled next
-    #[clap(long, conflicts_with_all(&["cadence", "earlier", "much-earlier", "later", "much-later"]), parse(try_from_str = super::parse_utc_datetime))]
+    #[clap(long, short, conflicts_with_all(&["cadence", "bump"]), parse(try_from_str = super::parse_utc_datetime))]
     next: Option<DateTime<Utc>>,
 
     /// Set the cadence manually (see add --help for docs on this.)
-    #[clap(long, conflicts_with_all(&["next", "earlier", "much-earlier", "later", "much-later"]))]
+    #[clap(long, short, conflicts_with_all(&["next", "bump"]))]
     cadence: Option<Cadence>,
 
-    /// Tweak this item's next schedule to be a little earlier
-    #[clap(long, short('e'), conflicts_with_all(&["cadence", "next", "much-earlier", "later", "much-later"]))]
-    earlier: bool,
+    /// Tweak this item's schedule a little earlier or later
+    #[clap(long, short, arg_enum, conflicts_with_all(&["cadence", "next"]))]
+    bump: Option<Bump>,
+}
 
-    /// Tweak this item's next schedule to be much earlier
-    #[clap(long, short('E'), conflicts_with_all(&["cadence", "next", "earlier", "later", "much-later"]))]
-    much_earlier: bool,
-
-    /// Tweak this item's next schedule to be a little later
-    #[clap(long, short('l'), conflicts_with_all(&["cadence", "next", "earlier", "much-earlier", "much-later"]))]
-    later: bool,
-
-    /// Tweak this item's next schedule to be much later
-    #[clap(long, short('L'), conflicts_with_all(&["cadence", "next", "earlier", "much-earlier", "later"]))]
-    much_later: bool,
+#[derive(clap::ArgEnum, Clone, Debug)]
+enum Bump {
+    Earlier,
+    MuchEarlier,
+    Later,
+    MuchLater,
 }
 
 impl Command {
