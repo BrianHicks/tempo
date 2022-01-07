@@ -2,6 +2,7 @@ use crate::cadence::Cadence;
 use crate::format::Format;
 use crate::item::Item;
 use crate::pid::Pid;
+use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use clap::Parser;
@@ -33,17 +34,7 @@ impl AddCommand {
         let now = Utc::now();
 
         let tag_id: Option<u64> = match &self.tag {
-            Some(tag) => Some(
-                conn.query_row(
-                    // We use `DO UPDATE SET` for upsert here because `DO
-                    // NOTHING` makes the query fail to return the ID in the
-                    // RETURNING clause.
-                    "INSERT INTO tags (name) VALUES (?1) ON CONFLICT DO UPDATE SET name = ?1 RETURNING id",
-                    [tag],
-                    |row| row.get(0),
-                )
-                .context("could not insert the new tag")?,
-            ),
+            Some(tag_name) => Some(Tag::get_or_create(conn, tag_name)?.id),
             None => None,
         };
 
@@ -211,31 +202,6 @@ mod test {
             .expect("failed to find a new tag");
 
         assert_eq!(tag, db_tag);
-
-        conn.query_row("SELECT * FROM items WHERE tag_id = ?", [tag_id], |_| Ok(()))
-            .expect("expected at least one row with the new tag")
-    }
-
-    #[test]
-    fn uses_existing_tag() {
-        let mut command = default();
-
-        let tag: String = "tag".into();
-        command.tag = Some(tag.clone());
-
-        let conn = conn();
-
-        let tag_id: u64 = conn
-            .query_row(
-                "INSERT INTO tags (name) VALUES (?) RETURNING id",
-                [tag],
-                |row| row.get(0),
-            )
-            .expect("failed to insert a new tag");
-
-        command
-            .run(&conn, Format::Human)
-            .expect("command should not fail");
 
         conn.query_row("SELECT * FROM items WHERE tag_id = ?", [tag_id], |_| Ok(()))
             .expect("expected at least one row with the new tag")

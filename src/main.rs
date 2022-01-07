@@ -4,6 +4,7 @@ mod db;
 mod format;
 mod item;
 mod pid;
+mod tag;
 
 use crate::format::Format;
 use anyhow::{Context, Result};
