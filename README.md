@@ -32,8 +32,8 @@ Let's have some examples:
 To start with, add an item:
 
 ```bash
-$ tempo add "What are my strengths? How can I use them?" --tags journaling
-Added with ID 1
+$ tempo add "What are my strengths? How can I use them?" --tag journaling
+Added "What are my strengths? How can I use them?" with ID 1
 ```
 
 Then, after some time passes, you can then pull the things that are due:
