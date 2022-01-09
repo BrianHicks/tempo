@@ -121,23 +121,25 @@ impl Display for Cadence {
     // sun. https://www.wolframalpha.com/input/?i=2%5E52+minutes
     #[allow(clippy::cast_precision_loss)]
     fn fmt(&self, out: &mut Formatter<'_>) -> fmt::Result {
-        if self.minutes >= YEARS * 2 {
+        let abs_minutes = self.minutes.abs();
+
+        if abs_minutes >= YEARS * 2 {
             write!(out, "~{}y", (self.minutes as f64 / YEARS as f64).round())
-        } else if self.minutes >= MONTHS * 3 {
+        } else if abs_minutes >= MONTHS * 3 {
             write!(out, "~{}m", (self.minutes as f64 / MONTHS as f64).round())
-        } else if self.minutes >= WEEKS {
+        } else if abs_minutes >= WEEKS {
             if self.minutes % WEEKS == 0 {
                 write!(out, "{}w", self.minutes / WEEKS)
             } else {
                 write!(out, "~{}w", (self.minutes as f64 / WEEKS as f64).round())
             }
-        } else if self.minutes >= DAYS {
+        } else if abs_minutes >= DAYS {
             if self.minutes % DAYS == 0 {
                 write!(out, "{}d", self.minutes / DAYS)
             } else {
                 write!(out, "~{}d", (self.minutes as f64 / DAYS as f64).round())
             }
-        } else if self.minutes >= HOURS {
+        } else if abs_minutes >= HOURS {
             if self.minutes % HOURS == 0 {
                 write!(out, "{}h", self.minutes / HOURS)
             } else {
@@ -318,6 +320,11 @@ mod tests {
         #[test]
         fn multiple_years() {
             assert_eq!("~2y", Cadence::years(2).to_string());
+        }
+
+        #[test]
+        fn regression_large_negative() {
+            assert_eq!("~-2d", Cadence::minutes(-2448).to_string());
         }
     }
 }
