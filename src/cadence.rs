@@ -1,7 +1,7 @@
 use chrono::{DateTime, Duration, TimeZone};
 use core::convert::From;
 use core::fmt::{self, Display, Formatter};
-use core::ops::{Add, AddAssign};
+use core::ops::{Add, AddAssign, Sub};
 use core::str::FromStr;
 use rusqlite::{
     types::{FromSql, FromSqlError, ToSqlOutput, Value, ValueRef},
@@ -179,6 +179,22 @@ impl<TZ: TimeZone> Add<Cadence> for DateTime<TZ> {
 
     fn add(self, cadence: Cadence) -> Self::Output {
         cadence + self
+    }
+}
+
+impl<TZ: TimeZone> Sub<DateTime<TZ>> for Cadence {
+    type Output = DateTime<TZ>;
+
+    fn sub(self, dt: Self::Output) -> Self::Output {
+        dt - Duration::minutes(self.minutes)
+    }
+}
+
+impl<TZ: TimeZone> Sub<Cadence> for DateTime<TZ> {
+    type Output = DateTime<TZ>;
+
+    fn sub(self, cadence: Cadence) -> Self::Output {
+        cadence - self
     }
 }
 
