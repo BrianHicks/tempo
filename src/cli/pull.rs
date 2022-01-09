@@ -48,12 +48,12 @@ impl Command {
         // dealing with enough data here for it to be a problem, though!
         let mut statement = conn
             .prepare(
-                "SELECT items.id, text, next, tags.name FROM items LEFT JOIN tags ON items.tag_id = tags.id ORDER BY next ASC",
+                "SELECT items.id, text, next, tags.name FROM items LEFT JOIN tags ON items.tag_id = tags.id WHERE next <= ? ORDER BY next ASC",
             )
             .context("could not prepare query to pull items")?;
 
         let unlimited = statement
-            .query_map([], |row| {
+            .query_map([Utc::now()], |row| {
                 Ok(Pulled {
                     id: row.get(0)?,
                     text: row.get(1)?,
