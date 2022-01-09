@@ -3,6 +3,8 @@ use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use rusqlite::Connection;
+use serde::Serialize;
+use tabled::{Table, Tabled};
 
 #[derive(Debug, Parser)]
 pub struct Command {
@@ -15,16 +17,31 @@ pub struct Command {
     tag: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Tabled)]
 struct Pulled {
+    #[header("ID")]
     id: u64,
+
+    #[header("Text")]
     text: String,
+
+    #[header("Scheduled")]
     next: DateTime<Utc>,
+
+    #[header("Tag")]
+    #[field(display_with = "display_tag")]
     tag: Option<String>,
 }
 
+fn display_tag(tag_opt: &Option<String>) -> String {
+    match tag_opt {
+        Some(tag) => tag.to_string(),
+        None => "-".to_string(),
+    }
+}
+
 impl Command {
-    pub fn run(&self, conn: &Connection, _format: Format) -> Result<()> {
+    pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
         // note to future explorers: the sqlite API doesn't let you use an array
         // in a parameter, so we can't do like `WHERE tags.name IN ?`. So,
         // we just pull everything and do the filtering locally. We're not
@@ -56,7 +73,16 @@ impl Command {
             None => unlimited.collect(),
         };
 
-        println!("{:#?}", pulled);
+        match format {
+            Format::Human => println!(
+                "{}",
+                Table::new(pulled).with(tabled::Style::PSQL).to_string()
+            ),
+            Format::Json => println!(
+                "{}",
+                serde_json::to_string(&pulled).context("could not dump pulled items to JSON")?
+            ),
+        };
 
         Ok(())
     }
