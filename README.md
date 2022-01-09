@@ -40,9 +40,9 @@ Then, after some time passes, you can then pull the things that are due:
 
 ```bash
 $ tempo pull
-| ID | Prompt                                     | Tags       |
-|----|--------------------------------------------|------------|
-| 1  | What are my strengths? How can I use them? | journaling |
+ ID |                    Text                    |            Scheduled            |    Tag
+----+--------------------------------------------+---------------------------------+------------
+ 1  | What are my strengths? How can I use them? | Fri, 07 Jan 20xx 10:57:55 -0600 | journaling
 ```
 
 (nb. the output format may change here, and you can get a machine-readable format of any command output by passing `--format json` before the subcommand.)
