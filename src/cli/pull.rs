@@ -1,6 +1,6 @@
 use crate::format::Format;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use rusqlite::Connection;
 use serde::Serialize;
@@ -26,6 +26,7 @@ struct Pulled {
     text: String,
 
     #[header("Scheduled")]
+    #[field(display_with = "display_next")]
     next: DateTime<Utc>,
 
     #[header("Tag")]
@@ -38,6 +39,10 @@ fn display_tag(tag_opt: &Option<String>) -> String {
         Some(tag) => tag.to_string(),
         None => "-".to_string(),
     }
+}
+
+fn display_next(dt: &DateTime<Utc>) -> String {
+    dt.with_timezone(&Local).to_rfc2822()
 }
 
 impl Command {
