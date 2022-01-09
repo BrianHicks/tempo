@@ -86,7 +86,7 @@ impl Command {
             .context("could not pull next items")?
             .flatten()
             .filter(|item| match &item.tag {
-                Some(filter_tag) => self.tag.contains(filter_tag),
+                Some(filter_tag) => self.tag.is_empty() || self.tag.contains(filter_tag),
                 None => self.tag.is_empty(),
             });
 
@@ -170,6 +170,41 @@ mod tests {
         let items = command.items(&conn).unwrap();
 
         assert!(items.is_empty());
+    }
+
+    #[test]
+    fn tagged_item_with_no_tag_specified() {
+        let conn = conn();
+
+        let tag_name = "tag";
+        let tag_id: u64 = conn
+            .query_row(
+                "INSERT INTO tags (name) VALUES (?) RETURNING id",
+                [tag_name],
+                |row| row.get(0),
+            )
+            .unwrap();
+
+        let cadence = Cadence::days(1);
+        let next = Utc::now() - cadence;
+        conn.execute(
+            "INSERT INTO items (text, next, cadence, tag_id) VALUES (?, ?, ?, ?)",
+            params!["X", next, cadence, tag_id],
+        )
+        .unwrap();
+
+        let command = Command::try_parse_from(&["pull"]).unwrap();
+        let items = command.items(&conn).unwrap();
+
+        assert_eq!(
+            vec![Pulled {
+                id: 1,
+                text: "X".into(),
+                next,
+                tag: Some(tag_name.into()),
+            }],
+            items
+        );
     }
 
     #[test]
