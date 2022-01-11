@@ -19,6 +19,24 @@ impl Tag {
         )
         .with_context(|| format!("could not get or insert the \"{}\" tag", name))
     }
+
+    pub fn all(conn: &Connection) -> Result<impl Iterator<Item = Tag>> {
+        let mut statement = conn
+            .prepare("SELECT id, name FROM tags")
+            .context("could not prepare statement to get tags")?;
+
+        let tags = statement
+            .query_map([], |row| {
+                Ok(Tag {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                })
+            })?
+            .collect::<rusqlite::Result<Vec<Tag>>>()
+            .context("could not pull tags")?;
+
+        Ok(tags.into_iter())
+    }
 }
 
 #[cfg(test)]
