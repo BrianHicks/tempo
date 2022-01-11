@@ -3,7 +3,7 @@ static DEFAULT_INTEGRAL_FACTOR: f64 = 0.3;
 static DEFAULT_INTEGRAL_DECAY: f64 = 0.5;
 static DEFAULT_DERIVATIVE_FACTOR: f64 = 0.1;
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Pid {
     pub proportional_factor: f64,
 

@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, PartialEq)]
 pub struct Item {
     pub id: u64,
     pub text: String,
