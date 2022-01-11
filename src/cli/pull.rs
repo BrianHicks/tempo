@@ -2,9 +2,8 @@ use crate::format::Format;
 use crate::item::Item;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{Local, Utc};
+use chrono::Local;
 use clap::Parser;
-use itertools::Itertools;
 use rusqlite::Connection;
 use std::collections::HashSet;
 
@@ -43,8 +42,6 @@ impl Command {
     }
 
     fn items(&self, conn: &Connection) -> Result<Vec<Item>> {
-        let now = Utc::now();
-
         let tag_ids: Option<HashSet<u64>> = match &self.tag {
             Some(tag_names) => Some(
                 Tag::all(&conn)
@@ -62,10 +59,8 @@ impl Command {
         // under 1,000, so we're not going to see a huge speed benefit (computers
         // are fast!) and we'd probably have to introduce some query builder
         // dependency as well. Let's see how far we can take the naive pattern!
-        let items = Item::all(&conn)
+        let items = Item::due(conn)
             .context("couldn't get items from the database")?
-            .sorted_by(|l, r| l.next.cmp(&r.next))
-            .filter(|item| item.next <= now)
             .filter(|item| match &tag_ids {
                 Some(ids) => item
                     .tag_id
@@ -85,6 +80,7 @@ impl Command {
 mod tests {
     use super::*;
     use crate::cadence::Cadence;
+    use chrono::Utc;
     use rusqlite::params;
 
     fn conn() -> Connection {

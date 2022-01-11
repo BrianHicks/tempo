@@ -55,11 +55,11 @@ impl Item {
         .with_context(|| format!("could not retrieve item with ID {}", id))
     }
 
-    pub fn all(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
-        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, integral_decay, last_error, derivative_factor FROM items").context("could not prepare query to get items")?;
+    pub fn due(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
+        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, integral_decay, last_error, derivative_factor FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
 
         let items = statement
-            .query_map([], |row| {
+            .query_map([Utc::now()], |row| {
                 Ok(Item {
                     id: row.get(0)?,
                     text: row.get(1)?,
