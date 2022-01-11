@@ -31,7 +31,7 @@ pub enum Bump {
 impl Item {
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(
-            "SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, integral_decay, last_error, derivative_factor FROM items WHERE id = ?",
+            "SELECT id, text, tag_id, cadence, next, last, integral, last_error FROM items WHERE id = ?",
             [id],
             |row| {
                 Ok(Item {
@@ -42,12 +42,8 @@ impl Item {
                     next: row.get(4)?,
                     last: row.get(5)?,
                     pid: Pid {
-                        proportional_factor: row.get(6)?,
-                        integral: row.get(7)?,
-                        integral_factor: row.get(8)?,
-                        integral_decay: row.get(9)?,
-                        last_error: row.get(10)?,
-                        derivative_factor: row.get(11)?,
+                        integral: row.get(6)?,
+                        last_error: row.get(7)?,
                     },
                 })
             },
@@ -56,7 +52,7 @@ impl Item {
     }
 
     pub fn due(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
-        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, integral_decay, last_error, derivative_factor FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
+        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, last, integral, last_error FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
 
         let items = statement
             .query_map([Utc::now()], |row| {
@@ -68,12 +64,8 @@ impl Item {
                     next: row.get(4)?,
                     last: row.get(5)?,
                     pid: Pid {
-                        proportional_factor: row.get(6)?,
-                        integral: row.get(7)?,
-                        integral_factor: row.get(8)?,
-                        integral_decay: row.get(9)?,
-                        last_error: row.get(10)?,
-                        derivative_factor: row.get(11)?,
+                        integral: row.get(6)?,
+                        last_error: row.get(7)?,
                     },
                 })
             })?
@@ -85,18 +77,15 @@ impl Item {
 
     pub fn save(&self, conn: &Connection) -> Result<()> {
         conn.execute(
-            "UPDATE items SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, proportional_factor = ?, integral = ?, integral_factor = ?, last_error = ?, derivative_factor = ? WHERE id = ?",
+            "UPDATE items SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, integral = ?, last_error = ? WHERE id = ?",
             params![
                 self.text,
                 self.cadence,
                 self.next,
                 self.last,
                 self.tag_id,
-                self.pid.proportional_factor,
                 self.pid.integral,
-                self.pid.integral_factor,
                 self.pid.last_error,
-                self.pid.derivative_factor,
                 self.id,
             ]
         ).with_context(|| format!("could not item with ID {}", self.id))?;

@@ -1,48 +1,24 @@
-static DEFAULT_PROPORTIONAL_FACTOR: f64 = 1.5;
-static DEFAULT_INTEGRAL_FACTOR: f64 = 0.3;
-static DEFAULT_INTEGRAL_DECAY: f64 = 0.5;
-static DEFAULT_DERIVATIVE_FACTOR: f64 = 0.1;
+static PROPORTIONAL_FACTOR: f64 = 1.5;
+static INTEGRAL_FACTOR: f64 = 0.3;
+static INTEGRAL_DECAY: f64 = 0.5;
+static DERIVATIVE_FACTOR: f64 = 0.1;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Pid {
-    pub proportional_factor: f64,
-
     pub integral: f64,
-    pub integral_factor: f64,
-    pub integral_decay: f64,
-
     pub last_error: f64,
-    pub derivative_factor: f64,
 }
 
 impl Default for Pid {
     fn default() -> Pid {
-        Pid::new(
-            DEFAULT_PROPORTIONAL_FACTOR,
-            DEFAULT_INTEGRAL_FACTOR,
-            DEFAULT_INTEGRAL_DECAY,
-            DEFAULT_DERIVATIVE_FACTOR,
-        )
+        Pid {
+            integral: 0.0,
+            last_error: 0.0,
+        }
     }
 }
 
 impl Pid {
-    pub fn new(
-        proportional_factor: f64,
-        integral_factor: f64,
-        integral_decay: f64,
-        derivative_factor: f64,
-    ) -> Self {
-        Pid {
-            proportional_factor,
-            integral: 0.0,
-            integral_factor,
-            integral_decay,
-            last_error: 0.0,
-            derivative_factor,
-        }
-    }
-
     pub fn next(&mut self, error: f64) -> f64 {
         let p = error;
         let i = self.next_integral(error);
@@ -51,12 +27,18 @@ impl Pid {
         self.integral = i;
         self.last_error = error;
 
-        self.next_output(p, i, d)
+        let p_f = p * PROPORTIONAL_FACTOR;
+        let i_f = i * INTEGRAL_FACTOR;
+        let d_f = d * DERIVATIVE_FACTOR;
+        let out = p_f + i_f - d_f;
+
+        log::debug!("p: {}, i: {}, d: {}, out: {}", p_f, i_f, d_f, out);
+        out
     }
 
     fn next_integral(&self, error: f64) -> f64 {
         let decay = if error.abs() < f64::EPSILON {
-            self.integral_decay
+            INTEGRAL_DECAY
         } else {
             1.0
         };
@@ -67,16 +49,6 @@ impl Pid {
     fn next_derivative(&self, error: f64) -> f64 {
         error - self.last_error
     }
-
-    fn next_output(&self, p: f64, i: f64, d: f64) -> f64 {
-        let p_f = p * self.proportional_factor;
-        let i_f = i * self.integral_factor;
-        let d_f = d * self.derivative_factor;
-        let out = p_f + i_f - d_f;
-
-        log::debug!("p: {}, i: {}, d: {}, out: {}", p_f, i_f, d_f, out);
-        out
-    }
 }
 
 #[cfg(test)]
@@ -85,56 +57,34 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_proportional() {
-        let mut p = Pid::new(1.0, 0.0, 0.0, 0.0);
+    fn response_is_in_proportion_to_error() {
+        let mut less = Pid::default();
+        let mut more = Pid::default();
 
-        assert_eq!(1.0, p.next(1.0));
+        // the values here are less important than the fact that the bigger
+        // output correlates with the bigger input. However, assert! does not
+        // give a nice error message when this fails if I do a direct comparison.
+        assert_eq!(1.7, less.next(1.0));
+        assert_eq!(3.4, more.next(2.0));
     }
 
     #[test]
-    fn test_proportional_factor() {
-        let mut p = Pid::new(2.0, 0.0, 0.0, 0.0);
+    fn response_grows_over_time() {
+        let mut pid = Pid::default();
 
-        assert_eq!(2.0, p.next(1.0));
+        assert_eq!(1.7, pid.next(1.0));
+        assert_eq!(2.1, pid.next(1.0));
+        assert_eq!(2.4, pid.next(1.0));
+        assert_eq!(2.7, pid.next(1.0));
+        assert_eq!(3.0, pid.next(1.0));
     }
 
     #[test]
-    fn test_integral() {
-        let mut i = Pid::new(0.0, 1.0, 0.0, 0.0);
+    fn sudden_large_error_is_dampened() {
+        let mut pid = Pid::default();
 
-        assert_eq!(1.0, i.next(1.0));
-    }
-
-    #[test]
-    fn test_integral_grows_over_time() {
-        let mut i = Pid::new(0.0, 1.0, 0.0, 0.0);
-
-        assert_eq!(1.0, i.next(1.0));
-        assert_eq!(2.0, i.next(1.0));
-        assert_eq!(3.0, i.next(1.0));
-    }
-
-    #[test]
-    fn test_integral_decays_when_zero_error() {
-        let mut i = Pid::new(0.0, 1.0, 0.5, 0.0);
-
-        assert_eq!(1.0, i.next(1.0));
-        assert_eq!(0.5, i.next(0.0));
-        assert_eq!(0.25, i.next(0.0));
-    }
-
-    #[test]
-    fn test_derivative() {
-        let mut d = Pid::new(0.0, 0.0, 0.0, 1.0);
-
-        assert_eq!(-1.0, d.next(1.0));
-    }
-
-    #[test]
-    fn test_derivative_dampens_by_rate_of_change() {
-        let mut d = Pid::new(0.0, 0.0, 0.0, 1.0);
-
-        assert_eq!(-1.0, d.next(1.0));
-        assert_eq!(0.0, d.next(1.0));
+        assert_eq!(1.7, pid.next(1.0));
+        assert_eq!(2.1, pid.next(1.0));
+        assert_eq!(9.2, pid.next(5.0));
     }
 }
