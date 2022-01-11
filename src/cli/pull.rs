@@ -44,7 +44,7 @@ impl Command {
     fn items(&self, conn: &Connection) -> Result<Vec<Item>> {
         let tag_ids: Option<HashSet<u64>> = match &self.tag {
             Some(tag_names) => Some(
-                Tag::all(&conn)
+                Tag::all(conn)
                     .context("couldn't get tags")?
                     .filter(|tag| tag_names.contains(&tag.name))
                     .map(|tag| tag.id)
@@ -62,11 +62,7 @@ impl Command {
         let items = Item::due(conn)
             .context("couldn't get items from the database")?
             .filter(|item| match &tag_ids {
-                Some(ids) => item
-                    .tag_id
-                    .as_ref()
-                    .map(|id| ids.contains(id))
-                    .unwrap_or(false),
+                Some(ids) => item.tag_id.as_ref().map_or(false, |id| ids.contains(id)),
                 None => true,
             })
             .take(self.limit.unwrap_or(usize::MAX))
