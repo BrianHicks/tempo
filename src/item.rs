@@ -55,6 +55,34 @@ impl Item {
         .with_context(|| format!("could not retrieve item with ID {}", id))
     }
 
+    pub fn all(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
+        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, last, proportional_factor, integral, integral_factor, integral_decay, last_error, derivative_factor FROM items").context("could not prepare query to get items")?;
+
+        let items = statement
+            .query_map([], |row| {
+                Ok(Item {
+                    id: row.get(0)?,
+                    text: row.get(1)?,
+                    tag_id: row.get(2)?,
+                    cadence: row.get(3)?,
+                    next: row.get(4)?,
+                    last: row.get(5)?,
+                    pid: Pid {
+                        proportional_factor: row.get(6)?,
+                        integral: row.get(7)?,
+                        integral_factor: row.get(8)?,
+                        integral_decay: row.get(9)?,
+                        last_error: row.get(10)?,
+                        derivative_factor: row.get(11)?,
+                    },
+                })
+            })?
+            .collect::<rusqlite::Result<Vec<Item>>>()
+            .context("could not pull rows")?;
+
+        Ok(items.into_iter())
+    }
+
     pub fn save(&self, conn: &Connection) -> Result<()> {
         conn.execute(
             "UPDATE items SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, proportional_factor = ?, integral = ?, integral_factor = ?, last_error = ?, derivative_factor = ? WHERE id = ?",
