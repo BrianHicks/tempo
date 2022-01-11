@@ -4,6 +4,7 @@ use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{Local, Utc};
 use clap::Parser;
+use itertools::Itertools;
 use rusqlite::Connection;
 use std::collections::HashSet;
 
@@ -61,8 +62,9 @@ impl Command {
         // under 1,000, so we're not going to see a huge speed benefit (computers
         // are fast!) and we'd probably have to introduce some query builder
         // dependency as well. Let's see how far we can take the naive pattern!
-        Ok(Item::all(&conn)
+        let items = Item::all(&conn)
             .context("couldn't get items from the database")?
+            .sorted_by(|l, r| l.next.cmp(&r.next))
             .filter(|item| item.next <= now)
             .filter(|item| match &tag_ids {
                 Some(ids) => item
@@ -73,7 +75,9 @@ impl Command {
                 None => true,
             })
             .take(self.limit.unwrap_or(usize::MAX))
-            .collect())
+            .collect();
+
+        Ok(items)
     }
 }
 
@@ -206,6 +210,34 @@ mod tests {
         let earlier = Cadence::days(2);
         let now = Utc::now();
 
+        let due_later = now - later;
+        conn.execute(
+            "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
+            params!["Due Later", due_later, later],
+        )
+        .unwrap();
+
+        let due_earlier = now - earlier;
+        conn.execute(
+            "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
+            params!["Due Earlier", due_earlier, earlier],
+        )
+        .unwrap();
+
+        let command = Command::try_parse_from(&["pull", "--limit", "1"]).unwrap();
+        let items = command.items(&conn).unwrap();
+
+        assert_eq!(vec![Item::get(2, &conn).unwrap()], items);
+    }
+
+    #[test]
+    fn sorted_by_next_ascending() {
+        let conn = conn();
+
+        let later = Cadence::days(1);
+        let earlier = Cadence::days(2);
+        let now = Utc::now();
+
         let due_earlier = now - earlier;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
@@ -220,9 +252,12 @@ mod tests {
         )
         .unwrap();
 
-        let command = Command::try_parse_from(&["pull", "--limit", "1"]).unwrap();
+        let command = Command::try_parse_from(&["pull"]).unwrap();
         let items = command.items(&conn).unwrap();
 
-        assert_eq!(vec![Item::get(1, &conn).unwrap()], items);
+        assert_eq!(
+            vec![Item::get(1, &conn).unwrap(), Item::get(2, &conn).unwrap()],
+            items
+        );
     }
 }
