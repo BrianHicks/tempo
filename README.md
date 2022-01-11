@@ -29,6 +29,12 @@ How about some examples?
 - **Want to stay up on interesting topics?**
   Prompt yourself: "find developments about […]", or just "go check this site for interesting things about […]".
 
+## Should I use this?
+
+You can if you want (and can follow the license restrictions), but note that Tempo is both a work-in-progress and a [home-cooked meal](https://www.robinsloan.com/notes/home-cooked-app/).
+As such, I'm open to contributions or modifications, but I'm unlikely to make a lot of huge changes that fit some use case that I don't personally have.
+(However, if you try to use Tempo to do the things described above and can't, I wanna hear about it!)
+
 ## How do I use it?
 
 To start with, add an item:
