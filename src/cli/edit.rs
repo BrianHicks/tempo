@@ -36,22 +36,30 @@ pub struct Command {
 
 impl Command {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
+        let mut item = Item::get(self.id, conn)
+            .with_context(|| format!("could not retrieve item with ID {}", self.id))?;
+
         if !self.text.is_empty() {
-            self.update_text(conn)?;
+            item.text = self.text.join(" ");
+
             if format == Format::Human {
                 println!("Updated text to {}", self.text.join(" "));
             }
         }
 
         if let Some(new_tag) = &self.tag {
-            self.update_tag(new_tag, conn)?;
+            let tag = Tag::get_or_create(conn, new_tag).context("couldn't get the new tag")?;
+
+            item.tag_id = Some(tag.id);
+
             if format == Format::Human {
                 println!("Updated tag to {}", new_tag);
             }
         }
 
-        if let Some(new_next) = &self.next {
-            self.update_next(new_next, conn)?;
+        if let Some(new_next) = self.next {
+            item.next = new_next;
+
             if format == Format::Human {
                 println!(
                     "Updated next to {}",
@@ -60,15 +68,18 @@ impl Command {
             }
         }
 
-        if let Some(new_cadence) = &self.cadence {
-            self.update_cadence(*new_cadence, conn)?;
+        if let Some(new_cadence) = self.cadence {
+            item.cadence = new_cadence;
+
             if format == Format::Human {
                 println!("Updated cadence to {}", new_cadence);
             }
         }
 
         if let Some(bump) = &self.bump {
-            let (adjustment, item) = self.update_bump(bump, conn)?;
+            let adjustment = item.bump_cadence(bump);
+            item.next = item.next + adjustment;
+
             if format == Format::Human {
                 println!(
                     "Bumped schedule by {} to {}",
@@ -78,8 +89,10 @@ impl Command {
             }
         }
 
+        item.save(conn)
+            .with_context(|| format!("could not save item with ID {} to the database", self.id))?;
+
         if format == Format::Json {
-            let item = Item::get(self.id, conn).context("couldn't get item for JSON formatting")?;
             println!(
                 "{}",
                 serde_json::to_string(&item).context("couldn't convert item to JSON")?
@@ -87,70 +100,6 @@ impl Command {
         }
 
         Ok(())
-    }
-
-    fn update_text(&self, conn: &Connection) -> Result<()> {
-        self.handle_update(
-            conn.execute(
-                "UPDATE items SET text = ? WHERE id = ?",
-                params![self.text.join(" "), self.id],
-            ),
-            "there was a problem updating item text",
-        )
-    }
-
-    fn update_tag(&self, new_tag: &str, conn: &Connection) -> Result<()> {
-        let tag = Tag::get_or_create(conn, new_tag).context("couldn't get the new tag")?;
-
-        self.handle_update(
-            conn.execute(
-                "UPDATE items SET tag_id = ? WHERE id = ?",
-                params![tag.id, self.id],
-            ),
-            "couldn't update the tag",
-        )
-    }
-
-    fn update_next(&self, new_next: &DateTime<Utc>, conn: &Connection) -> Result<()> {
-        self.handle_update(
-            conn.execute(
-                "UPDATE items SET next = ? WHERE id = ?",
-                params![new_next, self.id],
-            ),
-            "couldn't update next",
-        )
-    }
-
-    fn update_cadence(&self, new_cadence: Cadence, conn: &Connection) -> Result<()> {
-        self.handle_update(
-            conn.execute(
-                "UPDATE items SET cadence = ? WHERE id = ?",
-                params![new_cadence, self.id],
-            ),
-            "couldn't update cadence",
-        )
-    }
-
-    fn update_bump(&self, bump: &Bump, conn: &Connection) -> Result<(Cadence, Item)> {
-        let mut item = Item::get(self.id, conn).context("couldn't load item to bump")?;
-        let adjustment = item.bump_cadence(bump);
-        item.next = item.next + adjustment;
-
-        item.save(conn)
-            .context("could not save item after bumping")?;
-
-        Ok((adjustment, item))
-    }
-
-    fn handle_update(&self, count: rusqlite::Result<usize>, context: &'static str) -> Result<()> {
-        match count {
-            Ok(0) => anyhow::bail!("could not update item with ID {} (does it exist?)", self.id),
-            Ok(1) => Ok(()),
-            Ok(_) => anyhow::bail!(
-                "there were somehow multiple rows with the same ID. Please report this as a bug!"
-            ),
-            Err(problem) => Err(problem).context(context),
-        }
     }
 }
 
