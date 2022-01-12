@@ -26,7 +26,8 @@ impl Command {
             Format::Human => {
                 for item in pulled {
                     println!(
-                        "{} (due {})",
+                        "{}: {} (due {})",
+                        item.id,
                         item.text,
                         item.next.with_timezone(&Local).format("%A, %B %d, %Y")
                     );
