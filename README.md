@@ -146,7 +146,5 @@ I took lots of inspiration for this tool from [Andy Matuschak's notes on spaced 
 
 ## License
 
-Tempo will probably eventually be released under something like the ethical source license, or maybe the MIT license.
-However, I'm not ready to make that decision just yet so it's currently private code with a handful of folks invited to the repo to preview.
-Hi!
-If you're in that group, feel free to use this (provided, of course, that you're taking backups—it may eat all your data with no warning.)
+Tempo is licensed under [The Hippocratic License](https://firstdonoharm.dev), version 3.0.
+See LICENSE in the source for the applicable modules to this project.
