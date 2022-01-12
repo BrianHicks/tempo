@@ -53,9 +53,6 @@ $ tempo pull
  1  | What are my strengths? How can I use them? | Fri, 07 Jan 20xx 10:57:55 -0600 | journaling
 ```
 
-(nb. while the output format may change over time as I develop this system, you can get a machine-readable format of any command output by passing `--format json` before the subcommand.
-That should not change nearly as much, and will be much easier to parse if you're integrating this into a larger system.)
-
 Then you do the prompt—whatever it means for that particular prompt—and tell the system you've completed it.
 You can give feedback on the cadence at the same time by passing `--bump later`, `--bump earlier`, etc (see the `--help` output.)
 
@@ -76,6 +73,27 @@ Or drop it entirely:
 ```bash
 $ tempo drop 1
 Dropped 1
+```
+
+### JSON Output
+
+If you want to build other tools on top of this, add the `--format json` flag at the beginning of any command.
+For example:
+
+```bash
+$ tempo --format json add "What are my strengths? How can I use them?" --tag journaling | jq .
+{
+  "id": 2,
+  "text": "What are my strengths? How can I use them?",
+  "tag_id": 1,
+  "cadence": {
+    "minutes": 1440
+  },
+  "next": "2022-01-13T16:04:57.044733Z",
+  "last": null,
+  "integral": 0,
+  "last_error": 0
+}
 ```
 
 ## How Does it Work?
