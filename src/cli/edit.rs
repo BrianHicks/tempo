@@ -63,7 +63,7 @@ impl Command {
             if format == Format::Human {
                 println!(
                     "Updated next to {}",
-                    new_next.with_timezone(&Local).to_rfc2822()
+                    new_next.with_timezone(&Local).format("%A, %B %d, %Y")
                 );
             }
         }
@@ -84,7 +84,7 @@ impl Command {
                 println!(
                     "Bumped schedule by {} to {}",
                     adjustment,
-                    item.next.with_timezone(&Local).to_rfc2822()
+                    item.next.with_timezone(&Local).format("%A, %B %d, %Y")
                 );
             }
         }

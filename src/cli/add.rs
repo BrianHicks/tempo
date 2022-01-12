@@ -62,7 +62,7 @@ impl Command {
                 item.text,
                 item.id,
                 item.cadence,
-                item.next.with_timezone(&Local).format("%A, %B %e, %Y")
+                item.next.with_timezone(&Local).format("%A, %B %d, %Y")
             ),
             Format::Json => println!(
                 "{}",

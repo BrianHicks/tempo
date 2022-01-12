@@ -28,7 +28,7 @@ impl Command {
                     println!(
                         "{} (due {})",
                         item.text,
-                        item.next.with_timezone(&Local).to_rfc2822()
+                        item.next.with_timezone(&Local).format("%A, %B %d, %Y")
                     );
                 }
             }

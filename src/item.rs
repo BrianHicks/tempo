@@ -115,7 +115,7 @@ impl Item {
         if self.next > Utc::now() {
             bail!(
                 "can't finish an item before it's due ({})",
-                self.next.with_timezone(&Local).to_rfc2822()
+                self.next.with_timezone(&Local).format("%A, %B %d, %Y")
             )
         }
 
@@ -214,7 +214,7 @@ mod tests {
             assert_eq!(
                 format!(
                     "can't finish an item before it's due ({})",
-                    item.next.with_timezone(&Local).to_rfc2822()
+                    item.next.with_timezone(&Local).format("%A, %B %d, %Y")
                 ),
                 item.finish(&Bump::JustRight).unwrap_err().to_string()
             )
