@@ -239,7 +239,7 @@ mod tests {
                     item.next.with_timezone(&Local).format("%A, %B %d, %Y")
                 ),
                 item.finish(&Bump::JustRight).unwrap_err().to_string()
-            )
+            );
         }
 
         #[test]
@@ -250,7 +250,7 @@ mod tests {
 
             item.finish(&Bump::JustRight).unwrap();
 
-            assert!(old_next < item.next)
+            assert!(old_next < item.next);
         }
     }
 }
