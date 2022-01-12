@@ -121,6 +121,7 @@ impl Item {
 
         let adjustment = self.bump_cadence(bump);
 
+        self.last = Some(self.next);
         self.next = Utc::now() + self.cadence;
 
         Ok(adjustment)
@@ -228,6 +229,14 @@ mod tests {
             item.finish(&Bump::JustRight).unwrap();
 
             assert!(old_next < item.next)
+        }
+
+        #[test]
+        fn sets_last() {
+            let mut item = default();
+            item.finish(&Bump::JustRight).unwrap();
+
+            assert_ne!(None, item.last);
         }
     }
 }
