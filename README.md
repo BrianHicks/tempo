@@ -88,7 +88,6 @@ $ tempo --format json add "What are my strengths? How can I use them?" --tag jou
     "minutes": 1440
   },
   "next": "2022-01-13T16:04:57.044733Z",
-  "last": null,
   "integral": 0,
   "last_error": 0
 }

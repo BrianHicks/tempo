@@ -11,7 +11,6 @@ pub fn migration() -> String {
         // scheduling
         t.add_column("cadence", types::integer().default(1440));
         t.add_column("next", types::datetime());
-        t.add_column("last", types::datetime().nullable(true));
 
         // PID
         t.add_column("integral", types::float().default(0.0));

@@ -13,7 +13,6 @@ pub struct Item {
     // scheduling
     pub cadence: Cadence,
     pub next: DateTime<Utc>,
-    pub last: Option<DateTime<Utc>>,
 
     #[serde(flatten)]
     pub pid: Pid,
@@ -31,7 +30,7 @@ pub enum Bump {
 impl Item {
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(
-            "SELECT id, text, tag_id, cadence, next, last, integral, last_error FROM items WHERE id = ?",
+            "SELECT id, text, tag_id, cadence, next, integral, last_error FROM items WHERE id = ?",
             [id],
             |row| {
                 Ok(Item {
@@ -40,10 +39,9 @@ impl Item {
                     tag_id: row.get(2)?,
                     cadence: row.get(3)?,
                     next: row.get(4)?,
-                    last: row.get(5)?,
                     pid: Pid {
-                        integral: row.get(6)?,
-                        last_error: row.get(7)?,
+                        integral: row.get(5)?,
+                        last_error: row.get(6)?,
                     },
                 })
             },
@@ -52,7 +50,7 @@ impl Item {
     }
 
     pub fn due(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
-        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, last, integral, last_error FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
+        let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, integral, last_error FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
 
         let items = statement
             .query_map([Utc::now()], |row| {
@@ -62,10 +60,9 @@ impl Item {
                     tag_id: row.get(2)?,
                     cadence: row.get(3)?,
                     next: row.get(4)?,
-                    last: row.get(5)?,
                     pid: Pid {
-                        integral: row.get(6)?,
-                        last_error: row.get(7)?,
+                        integral: row.get(5)?,
+                        last_error: row.get(6)?,
                     },
                 })
             })?
@@ -77,12 +74,11 @@ impl Item {
 
     pub fn save(&self, conn: &Connection) -> Result<()> {
         conn.execute(
-            "UPDATE items SET text = ?, cadence = ?, next = ?, last = ?, tag_id = ?, integral = ?, last_error = ? WHERE id = ?",
+            "UPDATE items SET text = ?, cadence = ?, next = ?, tag_id = ?, integral = ?, last_error = ? WHERE id = ?",
             params![
                 self.text,
                 self.cadence,
                 self.next,
-                self.last,
                 self.tag_id,
                 self.pid.integral,
                 self.pid.last_error,
@@ -124,7 +120,6 @@ impl Item {
 
         let adjustment = self.bump_cadence(bump);
 
-        self.last = Some(self.next);
         self.next = now + self.cadence;
 
         Ok(adjustment)
@@ -143,7 +138,6 @@ mod tests {
             tag_id: None,
             cadence: Cadence::days(1),
             next: Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
-            last: None,
             pid: Pid::default(),
         }
     }
@@ -232,14 +226,6 @@ mod tests {
             item.finish(&Bump::JustRight).unwrap();
 
             assert!(old_next < item.next)
-        }
-
-        #[test]
-        fn sets_last() {
-            let mut item = default();
-            item.finish(&Bump::JustRight).unwrap();
-
-            assert_ne!(None, item.last);
         }
     }
 }
