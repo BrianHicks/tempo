@@ -3,7 +3,7 @@ use crate::format::Format;
 use crate::item::Item;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
 
@@ -57,7 +57,13 @@ impl Command {
         let item = Item::get(id, conn)?;
 
         match format {
-            Format::Human => println!("Added \"{}\" with ID {}", item.text, item.id),
+            Format::Human => println!(
+                "Added \"{}\" with ID {}. Currently scheduled {} from now, on {}",
+                item.text,
+                item.id,
+                item.cadence,
+                item.next.with_timezone(&Local).format("%A, %B %e, %Y")
+            ),
             Format::Json => println!(
                 "{}",
                 serde_json::to_string(&item).context("could not convert this item to JSON")?

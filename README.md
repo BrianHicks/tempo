@@ -41,7 +41,7 @@ To start with, add an item:
 
 ```bash
 $ tempo add "What are my strengths? How can I use them?" --tag journaling
-Added "What are my strengths? How can I use them?" with ID 1
+Added "What are my strengths? How can I use them?" with ID 1. Currently scheduled 1d from now, on Thursday, January 13, 2022
 ```
 
 Then, every day, pull the things that are due:
