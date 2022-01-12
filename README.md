@@ -69,8 +69,8 @@ Bumped schedule by ~2d to Saturday, January 15, 2022
 Or drop it entirely:
 
 ```bash
-$ tempo drop 1
-Dropped 1
+$ tempo deleted 1
+Deleted item with ID 1
 ```
 
 ### JSON Output

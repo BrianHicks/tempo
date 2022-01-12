@@ -48,6 +48,9 @@ enum Command {
 
     /// Finish a due item
     Finish(cli::finish::Command),
+
+    /// Delete an item
+    Delete(cli::delete::Command),
 }
 
 impl Opts {
@@ -62,6 +65,7 @@ impl Opts {
             Command::Pull(pull) => pull.run(&conn, self.format),
             Command::Edit(edit) => edit.run(&conn, self.format),
             Command::Finish(finish) => finish.run(&conn, self.format),
+            Command::Delete(delete) => delete.run(&conn, self.format),
         }
     }
 
