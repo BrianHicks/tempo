@@ -40,8 +40,14 @@ enum Command {
     /// Add a new item to the store
     Add(cli::add::Command),
 
-    /// Get the items that are ready to go
-    Pull(cli::pull::Command),
+    /// Get all the items in the store
+    All(cli::all::Command),
+
+    /// Get the items that are ready to go.
+    ///
+    /// Aliased as "pull" for backwards-compatibility.
+    #[clap(alias = "pull")]
+    Ready(cli::ready::Command),
 
     /// Edit an existing item
     Edit(cli::edit::Command),
@@ -62,7 +68,8 @@ impl Opts {
 
         match &self.command {
             Command::Add(add) => add.run(&conn, self.format),
-            Command::Pull(pull) => pull.run(&conn, self.format),
+            Command::All(all) => all.run(&conn, self.format),
+            Command::Ready(ready) => ready.run(&conn, self.format),
             Command::Edit(edit) => edit.run(&conn, self.format),
             Command::Finish(finish) => finish.run(&conn, self.format),
             Command::Delete(delete) => delete.run(&conn, self.format),

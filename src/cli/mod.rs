@@ -2,7 +2,7 @@ pub mod add;
 pub mod delete;
 pub mod edit;
 pub mod finish;
-pub mod pull;
+pub mod ready;
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
