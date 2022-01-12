@@ -48,24 +48,22 @@ Then, every day, pull the things that are due:
 
 ```bash
 $ tempo pull
- ID |                    Text                    |            Scheduled            |    Tag
-----+--------------------------------------------+---------------------------------+------------
- 1  | What are my strengths? How can I use them? | Fri, 07 Jan 20xx 10:57:55 -0600 | journaling
+What are my strengths? How can I use them? (due Thursday, January 13, 2022)
 ```
 
 Then you do the prompt—whatever it means for that particular prompt—and tell the system you've completed it.
-You can give feedback on the cadence at the same time by passing `--bump later`, `--bump earlier`, etc (see the `--help` output.)
+You give feedback on the cadence at the same time by passing `later`, `earlier`, etc (see the `--help` output.)
 
 ```bash
-$ tempo finish 1 --bump earlier
-Finished 1, next scheduled 3 weeks from now (20xx-12-30)
+$ tempo finish 1 just-right
+Finished! For next time, I bumped the schedule by <1h so the next time you'll see this will be Thursday, January 13, 2022
 ```
 
 You can also say that it was too early or too late to complete the task (again, whatever that means to you!)
 
 ```bash
 $ tempo edit 1 --bump later
-Bumped schedule by ~5d to Wed, 12 Jan 20xx 11:38:34 -0600
+Bumped schedule by ~2d to Saturday, January 15, 2022
 ```
 
 Or drop it entirely:
