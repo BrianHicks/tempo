@@ -49,6 +49,31 @@ impl Item {
         .with_context(|| format!("could not retrieve item with ID {}", id))
     }
 
+    pub fn all(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
+        let mut statement = conn
+            .prepare("SELECT id, text, tag_id, cadence, next, integral, last_error FROM items ORDER BY id ASC")
+            .context("could not prepare query to get all items")?;
+
+        let items = statement
+            .query_map([], |row| {
+                Ok(Item {
+                    id: row.get(0)?,
+                    text: row.get(1)?,
+                    tag_id: row.get(2)?,
+                    cadence: row.get(3)?,
+                    next: row.get(4)?,
+                    pid: Pid {
+                        integral: row.get(5)?,
+                        last_error: row.get(6)?,
+                    },
+                })
+            })?
+            .collect::<rusqlite::Result<Vec<Item>>>()
+            .context("could not pull rows")?;
+
+        Ok(items.into_iter())
+    }
+
     pub fn due(conn: &Connection) -> Result<impl Iterator<Item = Item>> {
         let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, integral, last_error FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
 
