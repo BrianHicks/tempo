@@ -2,7 +2,7 @@ use crate::cadence::Cadence;
 use crate::pid::Pid;
 use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Local, Utc};
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, Row};
 
 #[derive(Debug, serde::Serialize, PartialEq)]
 pub struct Item {
@@ -28,23 +28,25 @@ pub enum Bump {
 }
 
 impl Item {
+    fn from_row<'row, 'stmt>(row: &'row Row<'stmt>) -> rusqlite::Result<Item> {
+        Ok(Item {
+            id: row.get(0)?,
+            text: row.get(1)?,
+            tag_id: row.get(2)?,
+            cadence: row.get(3)?,
+            next: row.get(4)?,
+            pid: Pid {
+                integral: row.get(5)?,
+                last_error: row.get(6)?,
+            },
+        })
+    }
+
     pub fn get(id: u64, conn: &Connection) -> Result<Item> {
         conn.query_row(
             "SELECT id, text, tag_id, cadence, next, integral, last_error FROM items WHERE id = ?",
             [id],
-            |row| {
-                Ok(Item {
-                    id: row.get(0)?,
-                    text: row.get(1)?,
-                    tag_id: row.get(2)?,
-                    cadence: row.get(3)?,
-                    next: row.get(4)?,
-                    pid: Pid {
-                        integral: row.get(5)?,
-                        last_error: row.get(6)?,
-                    },
-                })
-            },
+            Self::from_row,
         )
         .with_context(|| format!("could not retrieve item with ID {}", id))
     }
@@ -55,19 +57,7 @@ impl Item {
             .context("could not prepare query to get all items")?;
 
         let items = statement
-            .query_map([], |row| {
-                Ok(Item {
-                    id: row.get(0)?,
-                    text: row.get(1)?,
-                    tag_id: row.get(2)?,
-                    cadence: row.get(3)?,
-                    next: row.get(4)?,
-                    pid: Pid {
-                        integral: row.get(5)?,
-                        last_error: row.get(6)?,
-                    },
-                })
-            })?
+            .query_map([], Self::from_row)?
             .collect::<rusqlite::Result<Vec<Item>>>()
             .context("could not pull rows")?;
 
@@ -78,19 +68,7 @@ impl Item {
         let mut statement = conn.prepare("SELECT id, text, tag_id, cadence, next, integral, last_error FROM items WHERE next <= ? ORDER BY next ASC").context("could not prepare query to get items")?;
 
         let items = statement
-            .query_map([Utc::now()], |row| {
-                Ok(Item {
-                    id: row.get(0)?,
-                    text: row.get(1)?,
-                    tag_id: row.get(2)?,
-                    cadence: row.get(3)?,
-                    next: row.get(4)?,
-                    pid: Pid {
-                        integral: row.get(5)?,
-                        last_error: row.get(6)?,
-                    },
-                })
-            })?
+            .query_map([Utc::now()], Self::from_row)?
             .collect::<rusqlite::Result<Vec<Item>>>()
             .context("could not pull rows")?;
 
