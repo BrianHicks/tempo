@@ -5,8 +5,10 @@ pub mod edit;
 pub mod finish;
 pub mod ready;
 
+use crate::cadence::Cadence;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, TimeZone, Utc};
+use std::str::FromStr;
 
 fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
     let base = if input == "today" {
@@ -17,6 +19,7 @@ fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
             .or_else(|_| {
                 Local.datetime_from_str(&format!("{}T00:00:00", input), "%Y-%m-%dT%H:%M:%S")
             })
+            .or_else(|_| Cadence::from_str(input).map(|cadence| Local::now() + cadence))
             .context("couldn't parse a date")?
     };
 
@@ -49,7 +52,15 @@ mod test {
 
         #[test]
         fn today() {
-            assert_eq!(Local::today(), parse_utc_datetime("today").unwrap().date(),);
+            assert_eq!(Local::today(), parse_utc_datetime("today").unwrap().date());
+        }
+
+        #[test]
+        fn cadence() {
+            assert_eq!(
+                Utc::today() + chrono::Duration::days(7),
+                parse_utc_datetime("1w").unwrap().date()
+            );
         }
 
         #[test]
@@ -70,24 +81,12 @@ mod test {
 
         #[test]
         fn out_of_range_month() {
-            assert_eq!(
-                "input is out of range",
-                parse_utc_datetime("2022-13-01")
-                    .unwrap_err()
-                    .root_cause()
-                    .to_string(),
-            );
+            assert!(parse_utc_datetime("2022-13-01").is_err());
         }
 
         #[test]
         fn out_of_range_day() {
-            assert_eq!(
-                "input is out of range",
-                parse_utc_datetime("2022-02-30")
-                    .unwrap_err()
-                    .root_cause()
-                    .to_string(),
-            );
+            assert!(parse_utc_datetime("2022-02-30").is_err());
         }
     }
 }
