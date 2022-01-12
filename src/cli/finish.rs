@@ -34,7 +34,6 @@ impl Command {
                     item.next.with_timezone(&Local).to_rfc2822()
                 ),
             Format::Json => println!("{}", serde_json::to_string(&item).context("couldn't convert item to JSON")?),
-
         }
 
         Ok(())
