@@ -112,7 +112,10 @@ impl Item {
     }
 
     pub fn finish(&mut self, bump: &Bump) -> Result<Cadence> {
-        if self.next > Utc::now() {
+        let now = Utc::now();
+
+        log::debug!("next: {}, now: {}", self.next, now);
+        if self.next > now {
             bail!(
                 "can't finish an item before it's due ({})",
                 self.next.with_timezone(&Local).format("%A, %B %d, %Y")
@@ -122,7 +125,7 @@ impl Item {
         let adjustment = self.bump_cadence(bump);
 
         self.last = Some(self.next);
-        self.next = Utc::now() + self.cadence;
+        self.next = now + self.cadence;
 
         Ok(adjustment)
     }
