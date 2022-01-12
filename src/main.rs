@@ -45,6 +45,9 @@ enum Command {
 
     /// Edit an existing item
     Edit(cli::edit::Command),
+
+    /// Finish a due item
+    Finish(cli::finish::Command),
 }
 
 impl Opts {
@@ -58,6 +61,7 @@ impl Opts {
             Command::Add(add) => add.run(&conn, self.format),
             Command::Pull(pull) => pull.run(&conn, self.format),
             Command::Edit(edit) => edit.run(&conn, self.format),
+            Command::Finish(finish) => finish.run(&conn, self.format),
         }
     }
 

@@ -1,7 +1,7 @@
 use crate::cadence::Cadence;
 use crate::pid::Pid;
-use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use anyhow::{bail, Context, Result};
+use chrono::{DateTime, Local, Utc};
 use rusqlite::{params, Connection};
 
 #[derive(Debug, serde::Serialize, PartialEq)]
@@ -110,6 +110,21 @@ impl Item {
 
         adjustment
     }
+
+    pub fn finish(&mut self, bump: &Bump) -> Result<Cadence> {
+        if self.next > Utc::now() {
+            bail!(
+                "can't finish an item before it's due ({})",
+                self.next.with_timezone(&Local).to_rfc2822()
+            )
+        }
+
+        let adjustment = self.bump_cadence(bump);
+
+        self.next = Utc::now() + self.cadence;
+
+        Ok(adjustment)
+    }
 }
 
 #[cfg(test)]
@@ -184,6 +199,35 @@ mod tests {
             large.bump_cadence(&Bump::MuchLater);
 
             assert!(large.cadence > small.cadence);
+        }
+    }
+
+    mod finish {
+        use super::*;
+
+        #[test]
+        fn disallows_tasks_before_next_date() {
+            let mut item = default();
+            item.next = Utc::now() + item.cadence;
+
+            assert_eq!(
+                format!(
+                    "can't finish an item before it's due ({})",
+                    item.next.with_timezone(&Local).to_rfc2822()
+                ),
+                item.finish(&Bump::JustRight).unwrap_err().to_string()
+            )
+        }
+
+        #[test]
+        fn moves_into_the_future() {
+            let mut item = default();
+            item.next = Utc::now() - item.cadence;
+            let old_next = item.next;
+
+            item.finish(&Bump::JustRight).unwrap();
+
+            assert!(old_next < item.next)
         }
     }
 }

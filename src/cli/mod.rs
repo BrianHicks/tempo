@@ -1,5 +1,6 @@
 pub mod add;
 pub mod edit;
+pub mod finish;
 pub mod pull;
 
 use anyhow::{Context, Result};
