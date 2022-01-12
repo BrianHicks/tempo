@@ -5,7 +5,7 @@ use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
 use clap::Parser;
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
 
 #[derive(Debug, Parser)]
 pub struct Command {
@@ -107,6 +107,7 @@ impl Command {
 mod test {
     use super::*;
     use chrono::TimeZone;
+    use rusqlite::params;
 
     fn setup() -> Connection {
         let mut conn = Connection::open_in_memory().unwrap();
