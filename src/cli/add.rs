@@ -39,9 +39,10 @@ impl Command {
 
         let id: u64 = conn
             .query_row(
-                // This *could* be a RETURNING for sure but making more queries
-                // in SQLite is super fast and it lets us use the shared "get
-                // an item" infrastructure here, which is better overall.
+                // This *could* be a RETURNING for all the columns instead of
+                // just ID, but making more queries in SQLite is super fast and
+                // it lets us use the shared "get an item" infrastructure here,
+                // which is better overall.
                 "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?) RETURNING id",
                 params![
                     self.text.join(" "),
