@@ -26,6 +26,9 @@ impl Command {
             .finish(&self.bump)
             .with_context(|| format!("couldn't finish item with ID {}", self.id))?;
 
+        item.save(conn)
+            .with_context(|| format!("couldn't save item with ID {}", self.id))?;
+
         match format {
             Format::Human =>
                 println!(
