@@ -85,7 +85,7 @@ impl Opts {
 fn main() {
     let opts = Opts::parse();
 
-    env_logger::init();
+    env_logger::Builder::from_env("TEMPO_LOG").init();
 
     if let Err(err) = opts.try_main() {
         eprintln!("{:?}", err);
