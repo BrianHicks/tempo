@@ -74,6 +74,18 @@ impl Opts {
             .get_db_path()
             .context("couldn't get the database path")?;
 
+        if let Some(parent) = path.parent() {
+            if !parent.exists() {
+                log::info!("creating parent directories to {}", path.display());
+                std::fs::create_dir_all(parent).with_context(|| {
+                    format!(
+                        "could not create the parent directories of {}",
+                        path.display()
+                    )
+                })?
+            }
+        }
+
         log::info!("using \"{}\" as the path to the database", path.display());
         Connection::open(path).context("couldn't open the database")
     }
