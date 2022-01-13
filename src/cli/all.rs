@@ -1,20 +1,38 @@
 use crate::format::Format;
 use crate::item::Item;
+use crate::tag::Tag;
 use anyhow::{Context, Result};
 use chrono::Local;
 use clap::Parser;
 use rusqlite::Connection;
 
 #[derive(Debug, Parser)]
-pub struct Command {}
+pub struct Command {
+    /// Tag to filter by
+    #[clap(long)]
+    tag: Option<String>,
+}
 
 impl Command {
-    pub fn run(conn: &Connection, format: Format) -> Result<()> {
-        let pulled: Vec<Item> = Item::all(conn).context("could not pull items")?.collect();
+    pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
+        let pulled = Item::all(conn).context("could not pull items")?;
+
+        let tag_id = match &self.tag {
+            Some(tag_name) => Some(
+                Tag::get_by_name(conn, tag_name)
+                    .context("could not get tag with that name")?
+                    .id,
+            ),
+            None => None,
+        };
+
+        let filtered: Vec<Item> = pulled
+            .filter(|item| tag_id.map_or(true, |id| item.id == id))
+            .collect();
 
         match format {
             Format::Human => {
-                for item in pulled {
+                for item in filtered {
                     println!(
                         "{}: {} (due {})",
                         item.id,
@@ -25,7 +43,7 @@ impl Command {
             }
             Format::Json => println!(
                 "{}",
-                serde_json::to_string(&pulled).context("could not dump pulled items to JSON")?
+                serde_json::to_string(&filtered).context("could not dump pulled items to JSON")?
             ),
         };
 

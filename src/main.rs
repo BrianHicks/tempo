@@ -41,7 +41,7 @@ enum Command {
     Add(cli::add::Command),
 
     /// Get all the items in the store
-    All,
+    All(cli::all::Command),
 
     /// Get the items that are ready to go.
     ///
@@ -68,7 +68,7 @@ impl Opts {
 
         match &self.command {
             Command::Add(add) => add.run(&conn, self.format),
-            Command::All => cli::all::Command::run(&conn, self.format),
+            Command::All(all) => all.run(&conn, self.format),
             Command::Ready(ready) => ready.run(&conn, self.format),
             Command::Edit(edit) => edit.run(&conn, self.format),
             Command::Finish(finish) => finish.run(&conn, self.format),

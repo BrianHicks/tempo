@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use rusqlite::Connection;
+use rusqlite::{Connection, Row};
 
 #[derive(Debug)]
 pub struct Tag {
@@ -8,6 +8,22 @@ pub struct Tag {
 }
 
 impl Tag {
+    fn from_row<'row, 'stmt>(row: &'row Row<'stmt>) -> rusqlite::Result<Self> {
+        Ok(Tag {
+            id: row.get(0)?,
+            name: row.get(1)?,
+        })
+    }
+
+    pub fn get_by_name(conn: &Connection, name: &str) -> Result<Tag> {
+        conn.query_row(
+            "SELECT id, name FROM tags WHERE name = ?",
+            [name],
+            Self::from_row,
+        )
+        .with_context(|| format!("could not get the \"{}\" tag", name))
+    }
+
     pub fn get_or_create(conn: &Connection, name: &str) -> Result<Tag> {
         conn.query_row(
             // We use `DO UPDATE SET` for upsert here because `DO
@@ -15,7 +31,7 @@ impl Tag {
             // RETURNING clause.
             "INSERT INTO tags (name) VALUES (?1) ON CONFLICT DO UPDATE SET name = ?1 RETURNING id, name",
             [name],
-            |row| Ok(Tag { id: row.get(0)?, name: row.get(1)? }),
+            Tag::from_row,
         )
         .with_context(|| format!("could not get or insert the \"{}\" tag", name))
     }
