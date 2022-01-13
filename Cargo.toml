@@ -14,7 +14,7 @@ clap = { version = "3.0.5", features = [ "std", "color", "suggestions", "derive"
 directories = "4.0.1"
 env_logger = "0.9.0"
 log = "0.4.14"
-refinery = { version = "0.8.2", features = [ "rusqlite" ] }
+refinery = { version = "0.8.4", features = [ "rusqlite" ] }
 rusqlite = { version = "0.26.3", features = [ "chrono", "bundled" ] }
 serde = { version = "1.0.133", features = [ "derive" ] }
 serde_json = "1.0.74"
