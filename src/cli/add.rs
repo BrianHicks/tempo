@@ -58,11 +58,11 @@ impl Command {
 
         match format {
             Format::Human => println!(
-                "Added \"{}\" with ID {}. Currently scheduled {} from now, on {}",
+                "Added \"{}\" with ID {}. Currently scheduled on {} and every {} thereafter",
                 item.text,
                 item.id,
+                item.next.with_timezone(&Local).format("%A, %B %d, %Y"),
                 item.cadence,
-                item.next.with_timezone(&Local).format("%A, %B %d, %Y")
             ),
             Format::Json => println!(
                 "{}",

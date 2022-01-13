@@ -6,6 +6,7 @@
 - parsed dates are now interpeted using the local time zone instead of UTC
 - allow "today" as a value in `--next` arguments
 - allow cadence values in `--next` arguments (e.g. you can now say `tempo add X --next 1w` to schedule the first iteration a week out)
+- improve output of "add" to be less confusing
 
 # 1.0.0
 
