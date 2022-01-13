@@ -24,7 +24,7 @@ impl Tag {
         .with_context(|| format!("could not get the \"{}\" tag", name))
     }
 
-    pub fn get_or_create(conn: &Connection, name: &str) -> Result<Tag> {
+    pub fn get_or_create_by_name(conn: &Connection, name: &str) -> Result<Tag> {
         conn.query_row(
             // We use `DO UPDATE SET` for upsert here because `DO
             // NOTHING` makes the query fail to return the ID in the
@@ -73,7 +73,7 @@ mod tests {
         let conn = conn();
         let tag_name = "tag".to_string();
 
-        let tag = Tag::get_or_create(&conn, &tag_name).unwrap();
+        let tag = Tag::get_or_create_by_name(&conn, &tag_name).unwrap();
 
         assert_eq!(tag_name, tag.name);
         assert_eq!(1, tag.id);
@@ -93,6 +93,6 @@ mod tests {
             )
             .expect("failed to insert a new tag");
 
-        assert_eq!(tag_id, Tag::get_or_create(&conn, &tag).unwrap().id);
+        assert_eq!(tag_id, Tag::get_or_create_by_name(&conn, &tag).unwrap().id);
     }
 }

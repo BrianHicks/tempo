@@ -33,7 +33,7 @@ impl Command {
         let now = Utc::now();
 
         let tag_id: Option<u64> = match &self.tag {
-            Some(tag_name) => Some(Tag::get_or_create(conn, tag_name)?.id),
+            Some(tag_name) => Some(Tag::get_or_create_by_name(conn, tag_name)?.id),
             None => None,
         };
 

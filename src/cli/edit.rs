@@ -48,7 +48,8 @@ impl Command {
         }
 
         if let Some(new_tag) = &self.tag {
-            let tag = Tag::get_or_create(conn, new_tag).context("couldn't get the new tag")?;
+            let tag =
+                Tag::get_or_create_by_name(conn, new_tag).context("couldn't get the new tag")?;
 
             item.tag_id = Some(tag.id);
 
