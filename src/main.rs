@@ -56,6 +56,7 @@ enum Command {
     Finish(cli::finish::Command),
 
     /// Delete an item
+    #[clap(alias = "drop")]
     Delete(cli::delete::Command),
 }
 
