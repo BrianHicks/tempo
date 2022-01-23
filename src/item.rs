@@ -96,12 +96,12 @@ impl Item {
     // we're not going to be anywhere near the danger zone (52 bits)
     #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
     pub fn bump_cadence(&mut self, bump: &Bump) -> Cadence {
-        let adjustment = Cadence::minutes(match bump {
-            Bump::MuchEarlier => self.pid.next(Cadence::days(-4).minutes as f64),
-            Bump::Earlier => self.pid.next(Cadence::days(-1).minutes as f64),
+        let adjustment = Cadence::days(match bump {
+            Bump::MuchEarlier => self.pid.next(Cadence::days(-4).days as f64),
+            Bump::Earlier => self.pid.next(Cadence::days(-1).days as f64),
             Bump::JustRight => self.pid.next(0.0),
-            Bump::Later => self.pid.next(Cadence::days(1).minutes as f64),
-            Bump::MuchLater => self.pid.next(Cadence::days(4).minutes as f64),
+            Bump::Later => self.pid.next(Cadence::days(1).days as f64),
+            Bump::MuchLater => self.pid.next(Cadence::days(4).days as f64),
         } as i64);
 
         log::debug!("adjusting cadence by {:?}", adjustment);
