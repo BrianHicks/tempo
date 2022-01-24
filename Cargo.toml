@@ -17,5 +17,5 @@ log = "0.4.14"
 refinery = { version = "0.8.4", features = [ "rusqlite" ] }
 rusqlite = { version = "0.26.3", features = [ "chrono", "bundled" ] }
 serde = { version = "1.0.133", features = [ "derive" ] }
-serde_json = "1.0.75"
+serde_json = "1.0.78"
 thiserror = "1.0.30"
