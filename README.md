@@ -85,7 +85,7 @@ $ tempo --format json add "What are my strengths? How can I use them?" --tag jou
   "text": "What are my strengths? How can I use them?",
   "tag_id": 1,
   "cadence": {
-    "minutes": 1440
+    "days": 1
   },
   "next": "2022-01-13T16:04:57.044733Z",
   "integral": 0,

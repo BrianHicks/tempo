@@ -1,4 +1,5 @@
-use chrono::{DateTime, Duration, TimeZone};
+use crate::date::Date;
+use chrono::Duration;
 use core::convert::From;
 use core::fmt::{self, Display, Formatter};
 use core::ops::{Add, AddAssign, Sub};
@@ -9,59 +10,50 @@ use rusqlite::{
 };
 use thiserror::Error;
 
-static HOURS: i64 = 60;
-static DAYS: i64 = HOURS * 24;
+static DAYS: i64 = 1;
 static WEEKS: i64 = DAYS * 7;
 static MONTHS: i64 = DAYS * 30;
 static YEARS: i64 = DAYS * 365;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Serialize, PartialOrd)]
 pub struct Cadence {
-    pub minutes: i64,
+    pub days: i64,
 }
 
 impl Cadence {
-    pub fn minutes(minutes: i64) -> Cadence {
-        Cadence { minutes }
-    }
-
-    pub fn hours(hours: i64) -> Cadence {
-        Self::minutes(hours * HOURS)
-    }
-
     pub fn days(days: i64) -> Cadence {
-        Self::minutes(days * DAYS)
+        Cadence { days }
     }
 
     pub fn weeks(weeks: i64) -> Cadence {
-        Self::minutes(weeks * WEEKS)
+        Self::days(weeks * WEEKS)
     }
 
     pub fn months(months: i64) -> Cadence {
-        Self::minutes(months * MONTHS)
+        Self::days(months * MONTHS)
     }
 
     pub fn years(years: i64) -> Cadence {
-        Self::minutes(years * YEARS)
+        Self::days(years * YEARS)
     }
 }
 
 impl Default for Cadence {
     fn default() -> Cadence {
-        Cadence::hours(1)
+        Cadence::days(1)
     }
 }
 
 impl ToSql for Cadence {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
-        Ok(ToSqlOutput::Owned(Value::Integer(self.minutes)))
+        Ok(ToSqlOutput::Owned(Value::Integer(self.days)))
     }
 }
 
 impl FromSql for Cadence {
     fn column_result(value: ValueRef<'_>) -> Result<Self, FromSqlError> {
         match value {
-            ValueRef::Integer(minutes) => Ok(Self::minutes(minutes)),
+            ValueRef::Integer(days) => Ok(Self::days(days)),
             _ => Err(FromSqlError::InvalidType),
         }
     }
@@ -102,7 +94,6 @@ impl FromStr for Cadence {
         };
 
         let out = match tag {
-            Some('h') => Self::hours(amount),
             Some('d') => Self::days(amount),
             Some('w') => Self::weeks(amount),
             Some('m') => Self::months(amount),
@@ -116,38 +107,29 @@ impl FromStr for Cadence {
 
 impl Display for Cadence {
     // losing precision is fine for this use case, since we're unlikely
-    // to have a number of minutes greater than 52 bits. Wolfram Alpha
-    // says 2^52 minutes is something like 90% of the expected life of the
-    // sun. https://www.wolframalpha.com/input/?i=2%5E52+minutes
+    // to have a number of days greater than 52 bits. Wolfram Alpha
+    // says 2^52 days is something like 890x of the age of the
+    // universe. https://www.wolframalpha.com/input/?i=2%5E52+days
     #[allow(clippy::cast_precision_loss)]
     fn fmt(&self, out: &mut Formatter<'_>) -> fmt::Result {
-        let abs_minutes = self.minutes.abs();
+        let abs_days = self.days.abs();
 
-        if abs_minutes >= YEARS * 2 {
-            write!(out, "~{}y", (self.minutes as f64 / YEARS as f64).round())
-        } else if abs_minutes >= MONTHS * 3 {
-            write!(out, "~{}m", (self.minutes as f64 / MONTHS as f64).round())
-        } else if abs_minutes >= WEEKS {
-            if self.minutes % WEEKS == 0 {
-                write!(out, "{}w", self.minutes / WEEKS)
+        if abs_days >= YEARS * 2 {
+            write!(out, "~{}y", (self.days as f64 / YEARS as f64).round())
+        } else if abs_days >= MONTHS * 3 {
+            write!(out, "~{}m", (self.days as f64 / MONTHS as f64).round())
+        } else if abs_days >= WEEKS {
+            if self.days % WEEKS == 0 {
+                write!(out, "{}w", self.days / WEEKS)
             } else {
-                write!(out, "~{}w", (self.minutes as f64 / WEEKS as f64).round())
-            }
-        } else if abs_minutes >= DAYS {
-            if self.minutes % DAYS == 0 {
-                write!(out, "{}d", self.minutes / DAYS)
-            } else {
-                write!(out, "~{}d", (self.minutes as f64 / DAYS as f64).round())
-            }
-        } else if abs_minutes >= HOURS {
-            if self.minutes % HOURS == 0 {
-                write!(out, "{}h", self.minutes / HOURS)
-            } else {
-                write!(out, "~{}h", (self.minutes as f64 / HOURS as f64).round())
+                write!(out, "~{}w", (self.days as f64 / WEEKS as f64).round())
             }
         } else {
-            let sign = if self.minutes < 0 { "-" } else { "" };
-            write!(out, "<{}1h", sign)
+            if self.days % DAYS == 0 {
+                write!(out, "{}d", self.days / DAYS)
+            } else {
+                write!(out, "~{}d", (self.days as f64 / DAYS as f64).round())
+            }
         }
     }
 }
@@ -166,32 +148,48 @@ pub enum ParseError {
     ExtraStuff,
 }
 
-impl<TZ: TimeZone> Add<DateTime<TZ>> for Cadence {
-    type Output = DateTime<TZ>;
+impl Add<Date> for Cadence {
+    type Output = Date;
 
     fn add(self, dt: Self::Output) -> Self::Output {
-        dt + Duration::minutes(self.minutes)
+        dt + Duration::days(self.days)
     }
 }
 
-impl<TZ: TimeZone> Add<Cadence> for DateTime<TZ> {
-    type Output = DateTime<TZ>;
+impl<TZ: chrono::TimeZone> Add<chrono::DateTime<TZ>> for Cadence {
+    type Output = chrono::DateTime<TZ>;
+
+    fn add(self, dt: Self::Output) -> Self::Output {
+        dt + Duration::days(self.days)
+    }
+}
+
+impl Add<Cadence> for Date {
+    type Output = Date;
 
     fn add(self, cadence: Cadence) -> Self::Output {
         cadence + self
     }
 }
 
-impl<TZ: TimeZone> Sub<DateTime<TZ>> for Cadence {
-    type Output = DateTime<TZ>;
+impl<TZ: chrono::TimeZone> Add<Cadence> for chrono::DateTime<TZ> {
+    type Output = chrono::DateTime<TZ>;
 
-    fn sub(self, dt: Self::Output) -> Self::Output {
-        dt - Duration::minutes(self.minutes)
+    fn add(self, cadence: Cadence) -> Self::Output {
+        cadence + self
     }
 }
 
-impl<TZ: TimeZone> Sub<Cadence> for DateTime<TZ> {
-    type Output = DateTime<TZ>;
+impl Sub<Date> for Cadence {
+    type Output = Date;
+
+    fn sub(self, dt: Self::Output) -> Self::Output {
+        dt - Duration::days(self.days)
+    }
+}
+
+impl Sub<Cadence> for Date {
+    type Output = Date;
 
     fn sub(self, cadence: Cadence) -> Self::Output {
         cadence - self
@@ -202,19 +200,19 @@ impl Add<Cadence> for Cadence {
     type Output = Cadence;
 
     fn add(self, other: Self) -> Self {
-        Self::minutes(self.minutes + other.minutes)
+        Self::days(self.days + other.days)
     }
 }
 
 impl AddAssign<Cadence> for Cadence {
     fn add_assign(&mut self, other: Self) {
-        self.minutes += other.minutes;
+        self.days += other.days;
     }
 }
 
 impl From<Duration> for Cadence {
     fn from(duration: Duration) -> Cadence {
-        Cadence::minutes(duration.num_minutes())
+        Cadence::days(duration.num_days())
     }
 }
 
@@ -224,16 +222,6 @@ mod tests {
 
     mod from_str {
         use super::*;
-
-        #[test]
-        fn parse_duration_hours() {
-            assert_eq!(Cadence::hours(1), Cadence::from_str("1h").unwrap());
-        }
-
-        #[test]
-        fn parse_duration_multiple() {
-            assert_eq!(Cadence::hours(24), Cadence::from_str("24h").unwrap());
-        }
 
         #[test]
         fn parse_duration_days() {
@@ -271,32 +259,12 @@ mod tests {
 
         #[test]
         fn negative() {
-            assert_eq!("<-1h", Cadence::minutes(-1).to_string());
-        }
-
-        #[test]
-        fn minutes() {
-            assert_eq!("<1h", Cadence::minutes(1).to_string());
-        }
-
-        #[test]
-        fn exact_hours() {
-            assert_eq!("1h", Cadence::hours(1).to_string());
-        }
-
-        #[test]
-        fn partial_hours() {
-            assert_eq!("~2h", Cadence::minutes(90).to_string());
+            assert_eq!("-1d", Cadence::days(-1).to_string());
         }
 
         #[test]
         fn exact_days() {
             assert_eq!("1d", Cadence::days(1).to_string());
-        }
-
-        #[test]
-        fn partial_days() {
-            assert_eq!("~2d", Cadence::hours(36).to_string());
         }
 
         #[test]
@@ -340,7 +308,7 @@ mod tests {
 
         #[test]
         fn regression_large_negative() {
-            assert_eq!("~-2d", Cadence::minutes(-2448).to_string());
+            assert_eq!("-2d", Cadence::days(-2).to_string());
         }
     }
 }

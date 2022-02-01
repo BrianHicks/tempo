@@ -6,24 +6,22 @@ pub mod finish;
 pub mod ready;
 
 use crate::cadence::Cadence;
+use crate::date::Date;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local, TimeZone, Utc};
+use chrono::{Local, TimeZone, Utc};
 use std::str::FromStr;
 
-fn parse_utc_datetime(input: &str) -> Result<DateTime<Utc>> {
+fn parse_utc_datetime(input: &str) -> Result<Date> {
     let base = if input == "today" {
         Local::now()
     } else {
         Local
-            .datetime_from_str(input, "%Y-%m-%dT%H:%M:%S")
-            .or_else(|_| {
-                Local.datetime_from_str(&format!("{}T00:00:00", input), "%Y-%m-%dT%H:%M:%S")
-            })
+            .datetime_from_str(&format!("{}T00:00:00", input), "%Y-%m-%dT%H:%M:%S")
             .or_else(|_| Cadence::from_str(input).map(|cadence| Local::now() + cadence))
             .context("couldn't parse a date")?
     };
 
-    Ok(base.with_timezone(&Utc))
+    Ok(base.with_timezone(&Utc).date().into())
 }
 
 #[cfg(test)]
@@ -37,29 +35,24 @@ mod test {
         #[test]
         fn date() {
             assert_eq!(
-                Local.ymd(2022, 1, 1).and_hms(0, 0, 0),
+                Date::from(Local.ymd(2022, 1, 1).with_timezone(&Utc)),
                 parse_utc_datetime("2022-01-01").unwrap()
             );
         }
 
         #[test]
-        fn datetime() {
-            assert_eq!(
-                Local.ymd(2022, 1, 1).and_hms(3, 2, 1),
-                parse_utc_datetime("2022-01-01T03:02:01").unwrap()
-            );
-        }
-
-        #[test]
         fn today() {
-            assert_eq!(Local::today(), parse_utc_datetime("today").unwrap().date());
+            assert_eq!(
+                Date::from(Local::today().with_timezone(&Utc)),
+                parse_utc_datetime("today").unwrap()
+            );
         }
 
         #[test]
         fn cadence() {
             assert_eq!(
-                Utc::today() + chrono::Duration::days(7),
-                parse_utc_datetime("1w").unwrap().date()
+                Date::from(Utc::today() + chrono::Duration::days(7)),
+                parse_utc_datetime("1w").unwrap()
             );
         }
 

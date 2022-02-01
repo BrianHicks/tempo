@@ -3,6 +3,7 @@
 
 mod cadence;
 mod cli;
+mod date;
 mod db;
 mod format;
 mod item;

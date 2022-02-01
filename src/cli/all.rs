@@ -2,7 +2,6 @@ use crate::format::Format;
 use crate::item::Item;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::Local;
 use clap::Parser;
 use rusqlite::Connection;
 
@@ -33,12 +32,7 @@ impl Command {
         match format {
             Format::Human => {
                 for item in filtered {
-                    println!(
-                        "{}: {} (due {})",
-                        item.id,
-                        item.text,
-                        item.next.with_timezone(&Local).format("%A, %B %d, %Y")
-                    );
+                    println!("{}: {} (due {})", item.id, item.text, item.next);
                 }
             }
             Format::Json => println!(

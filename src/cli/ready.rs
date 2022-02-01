@@ -1,8 +1,8 @@
+use crate::date::Date;
 use crate::format::Format;
 use crate::item::Item;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::Local;
 use clap::Parser;
 use rusqlite::Connection;
 use std::collections::HashSet;
@@ -25,12 +25,7 @@ impl Command {
         match format {
             Format::Human => {
                 for item in pulled {
-                    println!(
-                        "{}: {} (due {})",
-                        item.id,
-                        item.text,
-                        item.next.with_timezone(&Local).format("%A, %B %d, %Y")
-                    );
+                    println!("{}: {} (due {})", item.id, item.text, item.next);
                 }
             }
             Format::Json => println!(
@@ -77,7 +72,6 @@ impl Command {
 mod tests {
     use super::*;
     use crate::cadence::Cadence;
-    use chrono::Utc;
     use rusqlite::params;
 
     fn conn() -> Connection {
@@ -95,7 +89,7 @@ mod tests {
 
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
-            params!["X", Utc::now() + Cadence::days(1), Cadence::days(1)],
+            params!["X", Date::today() + Cadence::days(1), Cadence::days(1)],
         )
         .unwrap();
 
@@ -110,7 +104,7 @@ mod tests {
         let conn = conn();
 
         let cadence = Cadence::days(1);
-        let next = Utc::now() - cadence;
+        let next = Date::today() - cadence;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
             params!["X", next, cadence],
@@ -128,7 +122,7 @@ mod tests {
         let conn = conn();
 
         let cadence = Cadence::days(1);
-        let next = Utc::now() - cadence;
+        let next = Date::today() - cadence;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
             params!["X", next, cadence],
@@ -155,7 +149,7 @@ mod tests {
             .unwrap();
 
         let cadence = Cadence::days(1);
-        let next = Utc::now() - cadence;
+        let next = Date::today() - cadence;
         conn.execute(
             "INSERT INTO items (text, next, cadence, tag_id) VALUES (?, ?, ?, ?)",
             params!["X", next, cadence, tag_id],
@@ -182,7 +176,7 @@ mod tests {
             .unwrap();
 
         let cadence = Cadence::days(1);
-        let next = Utc::now() - cadence;
+        let next = Date::today() - cadence;
         conn.execute(
             "INSERT INTO items (text, next, cadence, tag_id) VALUES (?, ?, ?, ?)",
             params!["X", next, cadence, tag_id],
@@ -201,16 +195,16 @@ mod tests {
 
         let later = Cadence::days(1);
         let earlier = Cadence::days(2);
-        let now = Utc::now();
+        let today = Date::today();
 
-        let due_later = now - later;
+        let due_later = today - later;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
             params!["Due Later", due_later, later],
         )
         .unwrap();
 
-        let due_earlier = now - earlier;
+        let due_earlier = today - earlier;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
             params!["Due Earlier", due_earlier, earlier],
@@ -229,16 +223,16 @@ mod tests {
 
         let later = Cadence::days(1);
         let earlier = Cadence::days(2);
-        let now = Utc::now();
+        let today = Date::today();
 
-        let due_earlier = now - earlier;
+        let due_earlier = today - earlier;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
             params!["Due Earlier", due_earlier, earlier],
         )
         .unwrap();
 
-        let due_later = now - later;
+        let due_later = today - later;
         conn.execute(
             "INSERT INTO items (text, next, cadence) VALUES (?, ?, ?)",
             params!["Due Later", due_later, later],

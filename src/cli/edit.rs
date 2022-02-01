@@ -1,9 +1,9 @@
 use crate::cadence::Cadence;
+use crate::date::Date;
 use crate::format::Format;
 use crate::item::{Bump, Item};
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use rusqlite::Connection;
 
@@ -23,7 +23,7 @@ pub struct Command {
 
     /// Change when this item will be scheduled next
     #[clap(long, short, conflicts_with_all(&["cadence", "bump"]), parse(try_from_str = super::parse_utc_datetime))]
-    next: Option<DateTime<Utc>>,
+    next: Option<Date>,
 
     /// Set the cadence manually (see add --help for docs on this.)
     #[clap(long, short, conflicts_with_all(&["next", "bump"]))]
@@ -62,10 +62,7 @@ impl Command {
             item.next = new_next;
 
             if format == Format::Human {
-                println!(
-                    "Updated next to {}",
-                    new_next.with_timezone(&Local).format("%A, %B %d, %Y")
-                );
+                println!("Updated next to {}", new_next);
             }
         }
 
@@ -82,11 +79,7 @@ impl Command {
             item.next = item.next + adjustment;
 
             if format == Format::Human {
-                println!(
-                    "Bumped schedule by {} to {}",
-                    adjustment,
-                    item.next.with_timezone(&Local).format("%A, %B %d, %Y")
-                );
+                println!("Bumped schedule by {} to {}", adjustment, item.next);
             }
         }
 
@@ -107,7 +100,6 @@ impl Command {
 #[cfg(test)]
 mod test {
     use super::*;
-    use chrono::TimeZone;
     use rusqlite::params;
 
     fn setup() -> Connection {
@@ -118,12 +110,7 @@ mod test {
             .unwrap();
         conn.execute(
             "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?)",
-            params![
-                "test",
-                Cadence::days(1),
-                Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
-                1,
-            ],
+            params!["test", Cadence::days(1), Date::ymd(2022, 1, 1), 1,],
         )
         .unwrap();
 
@@ -180,9 +167,9 @@ mod test {
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(
-            Local.ymd(2022, 3, 1).and_hms(0, 0, 0),
+            Date::ymd(2022, 3, 1),
             conn.query_row("SELECT next FROM items WHERE id = 1", [], |row| row
-                .get::<_, DateTime<Utc>>(0))
+                .get::<_, Date>(0))
                 .unwrap()
         );
     }
