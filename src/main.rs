@@ -24,14 +24,14 @@ struct Opts {
     /// How to format the output. If you're just using this on the command line,
     /// you'll probably be fine with never touching this. If you're integrating
     /// with another system, however, you might want to use the JSON output.
-    #[clap(long, short, arg_enum, default_value = "human")]
+    #[clap(long, short, arg_enum, default_value = "human", global = true)]
     format: Format,
 
     /// Where to store the Tempo database. If absent, we'll figure out the
     /// right place for this based on the platform you're running (e.g. Linux
     /// will use the XDG specification, macOS will put stuff in `~/Application
     /// Support`, etc.)
-    #[clap(long, short, env = "TEMPO_DB_PATH")]
+    #[clap(long, short, env = "TEMPO_DB_PATH", global = true)]
     db_path: Option<PathBuf>,
 }
 
