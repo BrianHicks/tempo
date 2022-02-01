@@ -1,4 +1,4 @@
-use chrono::{Duration, FixedOffset, Local, TimeZone, Utc};
+use chrono::{Duration, Local, TimeZone, Utc};
 use core::fmt::{self, Display, Formatter};
 use core::ops::{Add, Sub};
 use rusqlite::{
@@ -35,7 +35,7 @@ impl Display for Date {
 impl ToSql for Date {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(ToSqlOutput::Owned(Value::Text(
-            self.date.and_hms(0, 0, 0).to_rfc2822(),
+            self.date.and_hms(0, 0, 0).to_rfc3339(),
         )))
     }
 }
@@ -43,13 +43,13 @@ impl ToSql for Date {
 impl FromSql for Date {
     fn column_result(value: ValueRef<'_>) -> Result<Self, FromSqlError> {
         match value {
-            ValueRef::Text(rfc2822_bytes) => {
-                let rfc2822_str = match std::str::from_utf8(rfc2822_bytes) {
+            ValueRef::Text(rfc3339_bytes) => {
+                let rfc3339_str = match std::str::from_utf8(rfc3339_bytes) {
                     Ok(s) => s,
                     Err(err) => return Err(FromSqlError::Other(Box::new(err))),
                 };
 
-                match chrono::DateTime::parse_from_str(rfc2822_str, "%Y-%m-%dT%H:%M:%S%Z") {
+                match chrono::DateTime::parse_from_str(rfc3339_str, "%+") {
                     Ok(datetime) => Ok(datetime.date().with_timezone(&Utc).into()),
                     Err(err) => Err(FromSqlError::Other(Box::new(err))),
                 }

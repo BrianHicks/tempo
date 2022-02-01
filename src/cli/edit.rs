@@ -4,7 +4,6 @@ use crate::format::Format;
 use crate::item::{Bump, Item};
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use rusqlite::Connection;
 
@@ -101,7 +100,6 @@ impl Command {
 #[cfg(test)]
 mod test {
     use super::*;
-    use chrono::TimeZone;
     use rusqlite::params;
 
     fn setup() -> Connection {
@@ -112,12 +110,7 @@ mod test {
             .unwrap();
         conn.execute(
             "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?)",
-            params![
-                "test",
-                Cadence::days(1),
-                Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
-                1,
-            ],
+            params!["test", Cadence::days(1), Date::ymd(2022, 1, 1), 1,],
         )
         .unwrap();
 
@@ -174,9 +167,9 @@ mod test {
         command.run(&conn, Format::Human).unwrap();
 
         assert_eq!(
-            Local.ymd(2022, 3, 1).and_hms(0, 0, 0),
+            Date::ymd(2022, 3, 1),
             conn.query_row("SELECT next FROM items WHERE id = 1", [], |row| row
-                .get::<_, DateTime<Utc>>(0))
+                .get::<_, Date>(0))
                 .unwrap()
         );
     }
