@@ -1,4 +1,3 @@
-use crate::date::Date;
 use crate::format::Format;
 use crate::item::Item;
 use crate::tag::Tag;
@@ -72,6 +71,7 @@ impl Command {
 mod tests {
     use super::*;
     use crate::cadence::Cadence;
+    use crate::date::Date;
     use rusqlite::params;
 
     fn conn() -> Connection {
