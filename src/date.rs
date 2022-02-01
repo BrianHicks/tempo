@@ -49,9 +49,13 @@ impl FromSql for Date {
                     Err(err) => return Err(FromSqlError::Other(Box::new(err))),
                 };
 
-                match chrono::DateTime::parse_from_str(rfc3339_str, "%+").or_else(|_| {
-                    chrono::DateTime::parse_from_str(rfc3339_str, "%Y-%m-%d %H:%M:%S.%f%:z")
-                }) {
+                match chrono::DateTime::parse_from_str(rfc3339_str, "%+")
+                    .or_else(|_| {
+                        chrono::DateTime::parse_from_str(rfc3339_str, "%Y-%m-%d %H:%M:%S.%f%:z")
+                    })
+                    .or_else(|_| {
+                        chrono::DateTime::parse_from_str(rfc3339_str, "%Y-%m-%d %H:%M:%S%:z")
+                    }) {
                     Ok(datetime) => Ok(datetime.date().with_timezone(&Utc).into()),
                     Err(err) => Err(FromSqlError::Other(Box::new(err))),
                 }
@@ -129,6 +133,19 @@ mod tests {
                 Date::from(now.date()),
                 Date::column_result(ValueRef::Text(
                     now.format("%Y-%m-%dT%H:%M:%S.%f%:z").to_string().as_bytes()
+                ))
+                .unwrap()
+            );
+        }
+
+        #[test]
+        fn from_v1_format_no_millis() {
+            let now = Utc::now();
+
+            assert_eq!(
+                Date::from(now.date()),
+                Date::column_result(ValueRef::Text(
+                    now.format("%Y-%m-%d %H:%M:%S%:z").to_string().as_bytes()
                 ))
                 .unwrap()
             );
