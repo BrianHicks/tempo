@@ -59,7 +59,6 @@ impl FromSql for Date {
     }
 }
 
-// TODO!
 impl Serialize for Date {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
