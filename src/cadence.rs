@@ -124,12 +124,10 @@ impl Display for Cadence {
             } else {
                 write!(out, "~{}w", (self.days as f64 / WEEKS as f64).round())
             }
+        } else if self.days % DAYS == 0 {
+            write!(out, "{}d", self.days / DAYS)
         } else {
-            if self.days % DAYS == 0 {
-                write!(out, "{}d", self.days / DAYS)
-            } else {
-                write!(out, "~{}d", (self.days as f64 / DAYS as f64).round())
-            }
+            write!(out, "~{}d", (self.days as f64 / DAYS as f64).round())
         }
     }
 }
