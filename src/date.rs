@@ -67,7 +67,7 @@ impl Serialize for Date {
         S: Serializer,
     {
         let mut s = serializer.serialize_struct("Date", 2)?;
-        s.serialize_field("date", &self.date.and_hms(0, 0, 0).to_rfc2822())?;
+        s.serialize_field("date", &self.date.and_hms(0, 0, 0).to_rfc3339())?;
         s.serialize_field("human_date", &self.to_string())?;
         s.end()
     }
