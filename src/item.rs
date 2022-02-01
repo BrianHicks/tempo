@@ -1,7 +1,8 @@
 use crate::cadence::Cadence;
+use crate::date::Date;
 use crate::pid::Pid;
 use anyhow::{bail, Context, Result};
-use chrono::{DateTime, Local, Utc};
+use chrono::Utc;
 use rusqlite::{params, Connection, Row};
 
 #[derive(Debug, serde::Serialize, PartialEq)]
@@ -12,7 +13,7 @@ pub struct Item {
 
     // scheduling
     pub cadence: Cadence,
-    pub next: DateTime<Utc>,
+    pub next: Date,
 
     #[serde(flatten)]
     pub pid: Pid,
@@ -111,19 +112,16 @@ impl Item {
     }
 
     pub fn finish(&mut self, bump: &Bump) -> Result<Cadence> {
-        let now = Utc::now();
+        let today = Date::today();
 
-        log::debug!("next: {}, now: {}", self.next, now);
-        if self.next > now {
-            bail!(
-                "can't finish an item before it's due ({})",
-                self.next.with_timezone(&Local).format("%A, %B %d, %Y")
-            )
+        log::debug!("next: {}, now: {}", self.next, today);
+        if self.next > today {
+            bail!("can't finish an item before it's due ({})", self.next)
         }
 
         let adjustment = self.bump_cadence(bump);
 
-        self.next = now + self.cadence;
+        self.next = today + self.cadence;
 
         Ok(adjustment)
     }
@@ -140,7 +138,7 @@ mod tests {
             text: "Test".into(),
             tag_id: None,
             cadence: Cadence::days(1),
-            next: Utc.ymd(2022, 1, 1).and_hms(0, 0, 0),
+            next: Utc.ymd(2022, 1, 1).into(),
             pid: Pid::default(),
         }
     }
@@ -209,13 +207,10 @@ mod tests {
         #[test]
         fn disallows_tasks_before_next_date() {
             let mut item = default();
-            item.next = Utc::now() + item.cadence;
+            item.next = Date::today() + item.cadence;
 
             assert_eq!(
-                format!(
-                    "can't finish an item before it's due ({})",
-                    item.next.with_timezone(&Local).format("%A, %B %d, %Y")
-                ),
+                format!("can't finish an item before it's due ({})", item.next,),
                 item.finish(&Bump::JustRight).unwrap_err().to_string()
             );
         }
@@ -223,7 +218,7 @@ mod tests {
         #[test]
         fn moves_into_the_future() {
             let mut item = default();
-            item.next = Utc::now() - item.cadence;
+            item.next = Date::today() - item.cadence;
             let old_next = item.next;
 
             item.finish(&Bump::JustRight).unwrap();

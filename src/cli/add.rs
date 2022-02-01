@@ -1,9 +1,9 @@
 use crate::cadence::Cadence;
+use crate::date::Date;
 use crate::format::Format;
 use crate::item::Item;
 use crate::tag::Tag;
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use rusqlite::{params, Connection};
 
@@ -25,12 +25,12 @@ pub struct Command {
 
     /// When should this next be scheduled?
     #[clap(short, long, parse(try_from_str = super::parse_utc_datetime))]
-    next: Option<DateTime<Utc>>,
+    next: Option<Date>,
 }
 
 impl Command {
     pub fn run(&self, conn: &Connection, format: Format) -> Result<()> {
-        let now = Utc::now();
+        let today = Date::today();
 
         let tag_id: Option<u64> = match &self.tag {
             Some(tag_name) => Some(Tag::get_or_create_by_name(conn, tag_name)?.id),
@@ -46,8 +46,8 @@ impl Command {
                 "INSERT INTO items (text, cadence, next, tag_id) VALUES (?, ?, ?, ?) RETURNING id",
                 params![
                     self.text.join(" "),
-                    self.get_cadence(now),
-                    self.get_next(now),
+                    self.get_cadence(today),
+                    self.get_next(today),
                     tag_id,
                 ],
                 |row| row.get(0),
@@ -59,10 +59,7 @@ impl Command {
         match format {
             Format::Human => println!(
                 "Added \"{}\" with ID {}. Currently scheduled on {} and every {} thereafter",
-                item.text,
-                item.id,
-                item.next.with_timezone(&Local).format("%A, %B %d, %Y"),
-                item.cadence,
+                item.text, item.id, item.next, item.cadence,
             ),
             Format::Json => println!(
                 "{}",
@@ -73,23 +70,22 @@ impl Command {
         Ok(())
     }
 
-    fn get_cadence(&self, now: DateTime<Utc>) -> Cadence {
+    fn get_cadence(&self, today: Date) -> Cadence {
         match (self.cadence, self.next) {
             (Some(cadence), _) => cadence,
-            (None, Some(_)) => (self.get_next(now) - now).into(),
+            (None, Some(_)) => (self.get_next(today) - today).into(),
             (None, None) => Cadence::days(1),
         }
     }
 
-    fn get_next(&self, now: DateTime<Utc>) -> DateTime<Utc> {
-        self.next.unwrap_or_else(|| now + self.get_cadence(now))
+    fn get_next(&self, today: Date) -> Date {
+        self.next.unwrap_or_else(|| today + self.get_cadence(today))
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use chrono::TimeZone;
 
     fn default() -> Command {
         Command {
@@ -111,24 +107,24 @@ mod test {
 
     #[test]
     fn next_is_used() {
-        let next = Utc::now() + Cadence::weeks(1);
+        let next = Date::today() + Cadence::weeks(1);
 
         let mut command = default();
         command.next = Some(next);
 
-        assert_eq!(next, command.get_next(Utc::now()));
+        assert_eq!(next, command.get_next(Date::today()));
     }
 
     #[test]
     fn next_is_calculated_based_on_cadence() {
-        let now = Utc::now();
+        let today = Date::today();
         let cadence = Cadence::days(1);
 
         let mut command = default();
         command.cadence = Some(cadence);
         command.next = None; // just to be explicit
 
-        assert_eq!(now + cadence, command.get_next(now));
+        assert_eq!(today + cadence, command.get_next(today));
     }
 
     #[test]
@@ -138,19 +134,19 @@ mod test {
         let mut command = default();
         command.cadence = Some(cadence);
 
-        assert_eq!(cadence, command.get_cadence(Utc::now()));
+        assert_eq!(cadence, command.get_cadence(Date::today()));
     }
 
     #[test]
     fn cadence_is_calculated_based_on_next() {
-        let now = Utc::now();
-        let next = now + Cadence::weeks(1);
+        let today = Date::today();
+        let next = today + Cadence::weeks(1);
 
         let mut command = default();
         command.cadence = None; // just to be explicit
         command.next = Some(next);
 
-        assert_eq!(Cadence::from(next - now), command.get_cadence(now));
+        assert_eq!(Cadence::from(next - today), command.get_cadence(today));
     }
 
     #[test]
@@ -159,7 +155,7 @@ mod test {
         command.cadence = None; // just to be explicit
         command.next = None; // just to be explicit
 
-        assert_eq!(Cadence::days(1), command.get_cadence(Utc::now()));
+        assert_eq!(Cadence::days(1), command.get_cadence(Date::today()));
     }
 
     #[test]
@@ -230,7 +226,7 @@ mod test {
     fn adds_specified_next() {
         let mut command = default();
 
-        let next = Utc.ymd(2022, 3, 1).and_hms(9, 0, 0);
+        let next = Date::ymd(2022, 3, 1);
         command.next = Some(next);
 
         let conn = conn();
@@ -242,7 +238,7 @@ mod test {
         assert_eq!(
             next,
             conn.query_row("SELECT next FROM items LIMIT 1", [], |row| row
-                .get::<_, DateTime<Utc>>(0))
+                .get::<_, Date>(0))
                 .expect("failed to query the database")
         );
     }

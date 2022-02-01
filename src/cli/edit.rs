@@ -1,4 +1,5 @@
 use crate::cadence::Cadence;
+use crate::date::Date;
 use crate::format::Format;
 use crate::item::{Bump, Item};
 use crate::tag::Tag;
@@ -23,7 +24,7 @@ pub struct Command {
 
     /// Change when this item will be scheduled next
     #[clap(long, short, conflicts_with_all(&["cadence", "bump"]), parse(try_from_str = super::parse_utc_datetime))]
-    next: Option<DateTime<Utc>>,
+    next: Option<Date>,
 
     /// Set the cadence manually (see add --help for docs on this.)
     #[clap(long, short, conflicts_with_all(&["next", "bump"]))]
@@ -62,10 +63,7 @@ impl Command {
             item.next = new_next;
 
             if format == Format::Human {
-                println!(
-                    "Updated next to {}",
-                    new_next.with_timezone(&Local).format("%A, %B %d, %Y")
-                );
+                println!("Updated next to {}", new_next);
             }
         }
 
@@ -82,11 +80,7 @@ impl Command {
             item.next = item.next + adjustment;
 
             if format == Format::Human {
-                println!(
-                    "Bumped schedule by {} to {}",
-                    adjustment,
-                    item.next.with_timezone(&Local).format("%A, %B %d, %Y")
-                );
+                println!("Bumped schedule by {} to {}", adjustment, item.next);
             }
         }
 

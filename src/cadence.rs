@@ -1,4 +1,5 @@
-use chrono::{DateTime, Duration, TimeZone};
+use crate::date::Date;
+use chrono::Duration;
 use core::convert::From;
 use core::fmt::{self, Display, Formatter};
 use core::ops::{Add, AddAssign, Sub};
@@ -147,32 +148,48 @@ pub enum ParseError {
     ExtraStuff,
 }
 
-impl<TZ: TimeZone> Add<DateTime<TZ>> for Cadence {
-    type Output = DateTime<TZ>;
+impl Add<Date> for Cadence {
+    type Output = Date;
 
     fn add(self, dt: Self::Output) -> Self::Output {
         dt + Duration::days(self.days)
     }
 }
 
-impl<TZ: TimeZone> Add<Cadence> for DateTime<TZ> {
-    type Output = DateTime<TZ>;
+impl<TZ: chrono::TimeZone> Add<chrono::DateTime<TZ>> for Cadence {
+    type Output = chrono::DateTime<TZ>;
+
+    fn add(self, dt: Self::Output) -> Self::Output {
+        dt + Duration::days(self.days)
+    }
+}
+
+impl Add<Cadence> for Date {
+    type Output = Date;
 
     fn add(self, cadence: Cadence) -> Self::Output {
         cadence + self
     }
 }
 
-impl<TZ: TimeZone> Sub<DateTime<TZ>> for Cadence {
-    type Output = DateTime<TZ>;
+impl<TZ: chrono::TimeZone> Add<Cadence> for chrono::DateTime<TZ> {
+    type Output = chrono::DateTime<TZ>;
+
+    fn add(self, cadence: Cadence) -> Self::Output {
+        cadence + self
+    }
+}
+
+impl Sub<Date> for Cadence {
+    type Output = Date;
 
     fn sub(self, dt: Self::Output) -> Self::Output {
         dt - Duration::days(self.days)
     }
 }
 
-impl<TZ: TimeZone> Sub<Cadence> for DateTime<TZ> {
-    type Output = DateTime<TZ>;
+impl Sub<Cadence> for Date {
+    type Output = Date;
 
     fn sub(self, cadence: Cadence) -> Self::Output {
         cadence - self

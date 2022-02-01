@@ -1,7 +1,6 @@
 use crate::format::Format;
 use crate::item::{Bump, Item};
 use anyhow::{Context, Result};
-use chrono::Local;
 use clap::Parser;
 use rusqlite::Connection;
 
@@ -34,7 +33,7 @@ impl Command {
                 println!(
                     "Finished! For next time, I bumped the schedule by {} so the next time you'll see this will be {}",
                     adjustment,
-                    item.next.with_timezone(&Local).format("%A, %B %d, %Y")
+                    item.next
                 ),
             Format::Json => println!("{}", serde_json::to_string(&item).context("couldn't convert item to JSON")?),
         }
