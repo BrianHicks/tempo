@@ -49,7 +49,9 @@ impl FromSql for Date {
                     Err(err) => return Err(FromSqlError::Other(Box::new(err))),
                 };
 
-                match chrono::DateTime::parse_from_str(rfc3339_str, "%+") {
+                match chrono::DateTime::parse_from_str(rfc3339_str, "%+").or_else(|_| {
+                    chrono::DateTime::parse_from_str(rfc3339_str, "%Y-%m-%d %H:%M:%S.%f%:z")
+                }) {
                     Ok(datetime) => Ok(datetime.date().with_timezone(&Utc).into()),
                     Err(err) => Err(FromSqlError::Other(Box::new(err))),
                 }
@@ -98,5 +100,53 @@ impl Sub<Duration> for Date {
 impl From<chrono::Date<Utc>> for Date {
     fn from(date: chrono::Date<Utc>) -> Self {
         Date { date }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod from_sql {
+        use super::*;
+        use rusqlite::types::{Value, ValueRef};
+
+        #[test]
+        fn from_rfc3339() {
+            let now = Utc::now();
+
+            assert_eq!(
+                Date::from(now.date()),
+                Date::column_result(ValueRef::Text(now.to_rfc3339().as_bytes())).unwrap()
+            );
+        }
+
+        #[test]
+        fn from_v1_format() {
+            let now = Utc::now();
+
+            assert_eq!(
+                Date::from(now.date()),
+                Date::column_result(ValueRef::Text(
+                    now.format("%Y-%m-%dT%H:%M:%S.%f%:z").to_string().as_bytes()
+                ))
+                .unwrap()
+            );
+        }
+
+        #[test]
+        fn roundtrip() {
+            let today = Date::today();
+
+            match today.to_sql().unwrap() {
+                ToSqlOutput::Owned(Value::Text(sqlified)) => {
+                    assert_eq!(
+                        today,
+                        Date::column_result(ValueRef::Text(sqlified.as_bytes())).unwrap()
+                    )
+                }
+                _ => assert!(false), // the current implementation never anything in here
+            };
+        }
     }
 }
