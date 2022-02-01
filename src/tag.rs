@@ -8,7 +8,7 @@ pub struct Tag {
 }
 
 impl Tag {
-    fn from_row<'row, 'stmt>(row: &'row Row<'stmt>) -> rusqlite::Result<Self> {
+    fn from_row(row: &'_ Row<'_>) -> rusqlite::Result<Self> {
         Ok(Tag {
             id: row.get(0)?,
             name: row.get(1)?,

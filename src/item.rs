@@ -29,7 +29,7 @@ pub enum Bump {
 }
 
 impl Item {
-    fn from_row<'row, 'stmt>(row: &'row Row<'stmt>) -> rusqlite::Result<Item> {
+    fn from_row(row: &'_ Row<'_>) -> rusqlite::Result<Item> {
         Ok(Item {
             id: row.get(0)?,
             text: row.get(1)?,
